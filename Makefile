@@ -1,8 +1,11 @@
-.PHONY: all clean
+.PHONY: all clean test
 all: examples.ttl
 
 clean:
 	rm examples-graph.jsonld examples.nq examples.ttl
+
+test: examples.ttl
+	pyshacl -s shapes/CriterionAssessment.ttl examples.ttl
 
 examples-graph.jsonld: examples.json context.jsonld
 	# Create a JSON-LD file from the JSON file generated
@@ -23,4 +26,3 @@ examples.nq: examples-graph.jsonld
 examples.ttl: examples.nq
 	# Convert n-quads into Turtle.
 	rapper -i nquads -o turtle examples.nq > examples.ttl
-
