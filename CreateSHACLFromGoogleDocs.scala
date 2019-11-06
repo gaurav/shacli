@@ -51,13 +51,24 @@ object CreateSHACLFromGoogleDocs extends App with LazyLogging {
        |
        |""".stripMargin)
 
+  val cardinalityRegex = """^(\d+)..(\d+|\*)$""".r
+
   val allAttributes = entitiesById.keys.toSeq.sorted.foreach(entityId => {
-    val attributesAsString = getAllAttributes(entityId).map(attr =>
-      s"""
-         |  sh:property [
+    val attributesAsString = getAllAttributes(entityId).map(attr => {
+      val cardinalityStr = attr("cardinality") match {
+        case cardinalityRegex(from, "*")  => s"sh:minCount $from"
+        case cardinalityRegex(from, to)   => s"sh:minCount $from\n    sh:maxCount $to"
+        case _                            => s"# Could not read cardinality '${attr("cardinality")}'"
+      }
+
+      // TODO: translate attr("dataType") into either an XSD type, class or @id.
+      s"""  sh:property [
          |    sh:name "${attr("name")}" ;
-         |  ]""".stripMargin
-    ).mkString("")
+         |    sh:description "${attr("description")}" ;
+         |    sh:path ${attr("iri")} ; # ${attr("iri-label")}
+         |    $cardinalityStr
+         |  ] ;""".stripMargin
+    }).mkString("\n")
 
     entitiesById(entityId).map(entity => {
       s"""cgshapes:${entity("name")} a sh:NodeShape ;
