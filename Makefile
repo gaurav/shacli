@@ -2,13 +2,16 @@
 all: test
 
 clean:
-	rm examples/graph.jsonld examples/examples.nq examples/examples.ttl
+	rm shapes/shapes.ttl \
+		 examples/graph.jsonld \
+		 examples/examples.nq \
+		 examples/examples.ttl
 
 test: examples/examples.ttl shapes/shapes.ttl
 	pyshacl -s shapes/shapes.ttl examples/examples.ttl
 
-shapes/shapes.ttl: data/**
-	sbt 'run "data/DMWG - Interpretation Model"' > shapes/shapes.ttl
+shapes/shapes.ttl: CreateSHACLFromGoogleDocs.scala data/**
+	sbt -warn 'run "data/DMWG - Interpretation Model"' > shapes/shapes.ttl
 
 examples/graph.jsonld: examples/examples.json examples/context.jsonld
 	# Create a JSON-LD file from the JSON file generated
