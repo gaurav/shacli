@@ -23,7 +23,7 @@
 
 
 cgshapes:Example a sh:NodeShape ;
-  
+
 
 .
 cgshapes:Entity a sh:NodeShape ;
@@ -204,7 +204,7 @@ cgshapes:ConditionMechanismStatement a sh:NodeShape ;
     sh:name "condition" ;
     sh:description "The condition whose mechanism is being described" ;
     sh:path SEPIO:0000276 ; # is_about_condition
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -280,7 +280,7 @@ cgshapes:CanonicalAllele a sh:NodeShape ;
     sh:name "canonicalAlleleType" ;
     sh:description "" ;
     sh:path CG:0013 ; # canonical allele type
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -323,7 +323,7 @@ cgshapes:ContextualAllele a sh:NodeShape ;
     sh:name "contextualAlleleType" ;
     sh:description "" ;
     sh:path CG:0016 ; # contextual allele type
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -571,7 +571,7 @@ cgshapes:Agent a sh:NodeShape ;
     sh:name "agentFor" ;
     sh:description "a relation between an agent and an other agent, typically an organization, on whose behalf a Contribution is made." ;
     sh:path SEPIO:0000169 ; # agent_for
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
 .
@@ -683,7 +683,7 @@ cgshapes:IndividualConditionStatement a sh:NodeShape ;
     sh:name "condition" ;
     sh:description "The condition that the person may have" ;
     sh:path SEPIO:0000276 ; # is_about_condition
-    sh:minCount 1
+    sh:minCount 0
   ] ;
 .
 cgshapes:FamilyConditionStatement a sh:NodeShape ;
@@ -963,7 +963,7 @@ cgshapes:CaseControlAlleleFrequencyStatement a sh:NodeShape ;
     sh:name "condition" ;
     sh:description "The condition studied in the case-control experiment" ;
     sh:path SEPIO:0000276 ; # is_about_condition
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -1566,7 +1566,7 @@ cgshapes:UserLabel a sh:NodeShape ;
   ] ;
 .
 cgshapes:DomainEntity a sh:NodeShape ;
-  
+
   sh:property [
     sh:name "label" ;
     sh:description "A name given to the resource." ;
@@ -1740,7 +1740,7 @@ cgshapes:FamilyCosegregationStatement a sh:NodeShape ;
     sh:name "condition" ;
     sh:description "Condition being tested for cosegregation" ;
     sh:path SEPIO:0000276 ; # is_about_condition
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -1875,7 +1875,7 @@ cgshapes:AggregateCosegregationStatement a sh:NodeShape ;
     sh:name "condition" ;
     sh:description "Condition being tested for cosegregation" ;
     sh:path SEPIO:0000276 ; # is_about_condition
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -2082,7 +2082,7 @@ cgshapes:LocusHeterogeneityStatement a sh:NodeShape ;
     sh:name "condition" ;
     sh:description "The condition for which the eitiology is defined" ;
     sh:path SEPIO:0000276 ; # is_about_condition
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
@@ -2563,7 +2563,7 @@ cgshapes:ContextualAlleleName a sh:NodeShape ;
     sh:name "nameType" ;
     sh:description "" ;
     sh:path CG:0015 ; # name type
-    sh:minCount 1 ;
+    sh:minCount 0 ;
     sh:maxCount 1
   ] ;
   sh:property [
