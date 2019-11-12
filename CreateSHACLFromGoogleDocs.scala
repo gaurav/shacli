@@ -57,7 +57,7 @@ object CreateSHACLFromGoogleDocs extends App with LazyLogging {
     val attributesAsString = getAllAttributes(entityId).map(attr => {
       val cardinalityStr = attr("cardinality") match {
         case cardinalityRegex(from, "*")  => s"sh:minCount $from"
-        case cardinalityRegex(from, to)   => s"sh:minCount $from\n    sh:maxCount $to"
+        case cardinalityRegex(from, to)   => s"sh:minCount $from ;\n    sh:maxCount $to"
         case _                            => s"# Could not read cardinality '${attr("cardinality")}'"
       }
 
