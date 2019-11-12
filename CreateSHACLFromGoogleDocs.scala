@@ -40,10 +40,18 @@ object CreateSHACLFromGoogleDocs extends App with LazyLogging {
        |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
        |@prefix obo: <http://purl.obolibrary.org/obo/> .
        |
-       |@prefix prov: <http://www.w3.org/ns/prov#> .
-       |@prefix dc: <http://purl.org/dc/elements/1.1/> .
-       |@prefix SEPIO: <http://purl.obolibrary.org/obo/SEPIO_> .
+       |@prefix BFO: <http://purl.obolibrary.org/obo/BFO_> .
+       |@prefix CG: <http://dataexchange.clinicalgenome.org/CG_> .
+       |@prefix DC: <http://purl.org/dc/elements/1.1/> .
+       |@prefix ERO: <http://purl.obolibrary.org/obo/ERO_> .
+       |@prefix FALDO: <http://biohackathon.org/resource/faldo> .
        |@prefix GENO: <http://purl.obolibrary.org/obo/GENO_> .
+       |@prefix PAV: <http://purl.org/pav/> .
+       |@prefix PROV: <http://www.w3.org/ns/prov#> .
+       |@prefix RDFS: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix RO: <http://purl.obolibrary.org/obo/RO_> .
+       |@prefix SEPIO: <http://purl.obolibrary.org/obo/SEPIO_> .
+       |@prefix SEPIO-CG: <http://purl.obolibrary.org/obo/SEPIO-CG_> .
        |
        |@prefix cgshapes: <http://dataexchange.clinicalgenome.org/interpretation/shacl/shapes/> .
        |
