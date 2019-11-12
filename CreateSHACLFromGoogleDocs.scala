@@ -69,11 +69,37 @@ object CreateSHACLFromGoogleDocs extends App with LazyLogging {
         case _                            => s"# Could not read cardinality '${attr("cardinality")}'"
       }
 
-      // TODO: translate attr("dataType") into either an XSD type, class or @id.
+      // dataType can give us four pieces of information:
+      //  - whether sh:nodeKind should be a literal or blank-node-or-IRI.
+      //  - whether sh:dataType should be an RDF type.
+      //  - whether sh:class should be set.
+      //  - whether values for this property should be from a particular value set.
+      val nodeKind = attr("dataType") match {
+        case "string" | "integer" | "number" | "Datetime" => "sh:Literal"
+        case "@id" => "sh:BlankNodeOrIRI"
+        case _ => "sh:BlankNodeOrIRI"
+      }
+
+      val dataType = attr("dataType") match {
+        case "string" => Some("rdf:string")
+        case "integer" => Some("xsd:integer")
+        case "number" => Some("xsd:decimal")
+        case "Datetime" => Some("xsd:dateTime")
+        case _ => None
+      }
+
+      // If dataType is set to an entity we already know about, that's our sh:class.
+      val entitiesWithDataType = entities.filter(entity => attr("dataType").equals(entity("name")))
+
+      // TODO: use sh:node to indicate which shape we expect the object to validate against.
+      // TODO: should we choose to close this definition using sh:closed?
       s"""  sh:property [
          |    sh:name "${attr("name")}" ;
          |    sh:description "${attr("description")}" ;
          |    sh:path ${attr("iri")} ; # ${attr("iri-label")}
+         |    sh:nodeKind $nodeKind ;
+         |    ${ dataType.fold("")(dataType => s"xsd:dataType $dataType ;") }
+         |    ${ entitiesWithDataType.map(entity => s"sh:class ${entity("iri")} ; # ${entity("name")}").mkString("\n") }
          |    $cardinalityStr
          |  ] ;""".stripMargin
     }).mkString("\n")
@@ -85,7 +111,11 @@ object CreateSHACLFromGoogleDocs extends App with LazyLogging {
       else Some(s"""cgshapes:$entityName a sh:NodeShape ;
            |  ${if (entity.contains("iri") && !entity("iri").isEmpty) s"""sh:targetClass ${entity("iri")} ; # ${entity.getOrElse("iri-label", "unlabelled")}""" else ""}
            |${attributesAsString}
-           |.""".stripMargin)
-    }).foreach(output.println(_))
+           |.
+           |""".stripMargin)
+    }).foreach({ str =>
+      // Remove all empty lines before printing it out.
+      output.println(str.split("\\s*\\n+").mkString("\n") + "\n")
+    })
   })
 }
