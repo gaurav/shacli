@@ -1,0 +1,17 @@
+# Ignore data and output files.
+/data
+
+# Ignore compilation files.
+/examples/examples.nq
+/examples/examples.ttl
+/examples/graph.jsonld
+/target
+/project/target
+
+# Ignore RDF-specific files.
+/catalog-v001.xml
+
+# Ignore code editor specific files.
+.metals
+.bloop
+.idea
