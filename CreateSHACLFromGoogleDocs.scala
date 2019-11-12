@@ -78,11 +78,14 @@ object CreateSHACLFromGoogleDocs extends App with LazyLogging {
          |  ] ;""".stripMargin
     }).mkString("\n")
 
-    entitiesById(entityId).map(entity => {
-      s"""cgshapes:${entity("name")} a sh:NodeShape ;
-         |  ${if (entity.contains("iri")) s"""sh:targetClass ${entity("iri")} ; # ${entity.getOrElse("iri-label", "unlabelled")}"""}
-         |  ${attributesAsString}
-         |.""".stripMargin
+    // Do we even have an entityName?
+    entitiesById(entityId).flatMap(entity => {
+      val entityName = entity("name")
+      if (entityName.isEmpty) None
+      else Some(s"""cgshapes:$entityName a sh:NodeShape ;
+           |  ${if (entity.contains("iri") && !entity("iri").isEmpty) s"""sh:targetClass ${entity("iri")} ; # ${entity.getOrElse("iri-label", "unlabelled")}""" else ""}
+           |${attributesAsString}
+           |.""".stripMargin)
     }).foreach(output.println(_))
   })
 }
