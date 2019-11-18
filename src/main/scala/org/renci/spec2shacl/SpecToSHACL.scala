@@ -103,7 +103,7 @@ object SpecToSHACL extends App with LazyLogging {
          |    sh:nodeKind $nodeKind ;
          |    ${ dataType.fold("")(dataType => s"xsd:dataType $dataType ;") }
          |    ${ entitiesWithDataType.map(entity => s"sh:class ${entity("iri")} ; # ${entity("name")}").mkString("\n") }
-         |    ${ entitiesWithDataType.filter(entity => entitiesById.contains(entity("name"))).map(entity => s"sh:node cgshapes:${entity("name")} ;").mkString("\n") }
+         |    ${ entitiesWithDataType.filter(entity => entitiesById.contains(entity("id"))).map(entity => s"sh:node cgshapes:${entity("name")} ;").mkString("\n") }
          |    $cardinalityStr
          |  ] ;""".stripMargin
     }).mkString("\n")
