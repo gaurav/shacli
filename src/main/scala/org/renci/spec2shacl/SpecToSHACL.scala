@@ -95,13 +95,16 @@ object SpecToSHACL extends App with LazyLogging {
       // If dataType is set to an entity we already know about, that's our sh:class.
       val entitiesWithDataType = entities.filter(entity => attr("dataType").equals(entity("name")))
 
-      // Is this property part of a ValueSet? If so, we have a very different representation.
+      // Is this property part of a ValueSet? If so, add constraints to ensure that
+      // the value set has the right skos:inScheme. Note that this must be present,
+      // whether or not the property itself is present.
       val valueSetConstraints = attr.get("@valueSetId").filter(!_.isEmpty).fold("")(valueSet => s"""
         |  sh:property [
         |    sh:name "${attr("name")} should be in ${attr.getOrElse("_valueSetLabel", valueSet)}" ;
         |    sh:path (${attr("iri")} skos:inScheme) ;
         |    sh:hasValue $valueSet ;
-        |    $cardinalityStr
+        |    sh:minCount 1 ;
+        |    sh:maxCount 1
         |  ] ;
         | """.stripMargin)
 
