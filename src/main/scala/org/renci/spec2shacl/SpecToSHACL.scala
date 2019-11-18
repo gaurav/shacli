@@ -1,3 +1,5 @@
+package org.renci.spec2shacl
+
 import java.io.{File, FileWriter, PrintWriter}
 import java.time.ZonedDateTime
 import java.util.Calendar
