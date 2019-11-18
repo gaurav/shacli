@@ -1,4 +1,4 @@
-import java.io.File
+import java.io.{File, FileWriter, PrintWriter}
 import java.time.ZonedDateTime
 import java.util.Calendar
 
@@ -12,6 +12,8 @@ import com.github.tototoshi.csv.CSVReader
 
 object SpecToSHACL extends App with LazyLogging {
   val inputDir = new File(args(0))
+  val outputFile = new File(args(1))
+  if (outputFile.exists && !outputFile.canWrite) throw new RuntimeException(s"Output file ${outputFile} is not writeable.")
 
   // Step 1. Read Type.csv to get a list of classes.
   val entities: Seq[Map[String, String]] = CSVReader.open(new File(inputDir, "Type.csv")).allWithHeaders
@@ -32,7 +34,7 @@ object SpecToSHACL extends App with LazyLogging {
     parentAttrs ++ attrs
   }
 
-  val output = System.out
+  val output = new PrintWriter(new FileWriter(outputFile))
   output.println(
     s"""@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
        |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -118,4 +120,6 @@ object SpecToSHACL extends App with LazyLogging {
       output.println(str.split("\\s*\\n+").mkString("\n") + "\n")
     })
   })
+
+  output.close
 }
