@@ -7,7 +7,7 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 // Set up the main class.
-mainClass in Compile := Some("CreateSHACLFromGoogleDocs")
+mainClass in Compile := Some("SpecToSHACL")
 
 libraryDependencies ++= {
   Seq(

@@ -6,11 +6,11 @@ import com.typesafe.scalalogging.LazyLogging
 import com.github.tototoshi.csv.CSVReader
 
 /**
- * CreateSHACLFromGoogleDocs reads the Google Docs as exported to CSV sheets in an input directory
- * and produces SHACL shapes for the specified attributes.
+ * SpecToSHACL reads the specification from Google Docs as exported to CSV sheets
+ * in an input directory and produces SHACL shapes for the specified attributes.
  */
 
-object CreateSHACLFromGoogleDocs extends App with LazyLogging {
+object SpecToSHACL extends App with LazyLogging {
   val inputDir = new File(args(0))
 
   // Step 1. Read Type.csv to get a list of classes.

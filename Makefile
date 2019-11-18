@@ -13,8 +13,8 @@ test: examples/examples.ttl shapes/shapes.ttl
 	pyshacl -s shapes/shapes.ttl examples/examples.ttl
 
 # Build the SHACL shapes from the specification downloaded from Google Docs.
-shapes/shapes.ttl: CreateSHACLFromGoogleDocs.scala
-	sbt -warn 'run "data/DMWG - Interpretation Model"' > shapes/shapes.ttl
+shapes/shapes.ttl: SpecToSHACL.scala
+	sbt -warn 'run "data/DMWG - Interpretation Model" shapes/shapes.ttl'
 
 # Generating the examples graph is a three step process:
 #	- First, we generate graph.jsonld by creating a JSON-LD file from the input
