@@ -94,7 +94,6 @@ object SpecToSHACL extends App with LazyLogging {
       // If dataType is set to an entity we already know about, that's our sh:class.
       val entitiesWithDataType = entities.filter(entity => attr("dataType").equals(entity("name")))
 
-      // TODO: use sh:node to indicate which shape we expect the object to validate against.
       // TODO: should we choose to close this definition using sh:closed?
       s"""  sh:property [
          |    sh:name "${attr("name")}" ;
