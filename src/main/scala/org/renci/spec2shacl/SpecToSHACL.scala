@@ -101,7 +101,7 @@ object SpecToSHACL extends App with LazyLogging {
       val valueSetConstraints = attr.get("@valueSetId").filter(!_.isEmpty).fold("")(valueSet => s"""
         |  sh:property [
         |    sh:name "${attr("name")} should be in ${attr.getOrElse("_valueSetLabel", valueSet)}" ;
-        |    sh:path (${attr("iri")} skos:inScheme) ;
+        |    sh:path ( ${attr("iri")} [ sh:inversePath SEPIO-CG:70004 ] ) ;
         |    sh:hasValue $valueSet ;
         |    sh:minCount 1 ;
         |    sh:maxCount 1
