@@ -38,7 +38,7 @@ object ValidationErrorPrinter {
 
     // 1. Group results by target node.
     val resultsByFocusNode = results.groupBy(_.getFocusNode)
-    resultsByFocusNode.foreach({ case (focusNode, results) =>
+    resultsByFocusNode.toSeq.sortBy(_._2.size).foreach({ case (focusNode, results) =>
       println(s"Focus node has ${results.size} errors: $focusNode")
       results.foreach({result =>
         println(s" - ${result.getPath}: ${result.getMessage}")
