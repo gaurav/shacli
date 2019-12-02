@@ -23,6 +23,8 @@ import org.topbraid.shacl.util.SHACLSystemModel
 import org.topbraid.shacl.vocabulary.DASH
 import org.topbraid.shacl.vocabulary.SH
 import org.topbraid.shacl.vocabulary.TOSH
+import org.apache.jena.vocabulary.RDF
+import org.apache.jena.vocabulary.RDFS
 
 import com.typesafe.scalalogging.LazyLogging
 import com.github.tototoshi.csv.CSVReader
@@ -33,20 +35,32 @@ import scala.collection.JavaConverters;
  */
 
 object ValidationErrorPrinter {
-  def print(report: ValidationReport): Unit = {
+  def print(report: ValidationReport, shapesModel: OntModel, dataModel: OntModel): Unit = {
     val results = JavaConverters.asScalaBuffer(report.results).toSeq
 
-    // 1. Group results by target node.
-    val resultsByFocusNode = results.groupBy(_.getFocusNode)
-    resultsByFocusNode.toSeq.sortBy(_._2.size).foreach({ case (focusNode, results) =>
-      println(s"Focus node has ${results.size} errors: $focusNode")
-      results.foreach({result =>
-        println(s" - ${result.getPath}: ${result.getMessage}")
+    // 1. Group results by source shape.
+    val resultsByClass = results.groupBy({ result =>
+      val focusNode = result.getFocusNode
+      val statement = dataModel.getProperty(focusNode.asResource, RDF.`type`)
+
+      if (statement == null) RDFS.Class
+      else statement.getObject
+    })
+    resultsByClass.toSeq.sortBy(_._2.size).foreach({ case (classNode, allResults) =>
+      println(s"Class has ${allResults.size} errors: $classNode")
+
+      // 2. Group results by target node.
+      val resultsByFocusNode = allResults.groupBy(_.getFocusNode)
+      resultsByFocusNode.toSeq.sortBy(_._2.size).foreach({ case (focusNode, results) =>
+        println(s" - Focus node has ${results.size} errors: $focusNode")
+        results.foreach({result =>
+          println(s"   - ${result.getPath}: ${result.getMessage}")
+        })
       })
       println()
     })
 
-    println(s"FAIL ${results.size} failures across ${resultsByFocusNode.keys.size} focus nodes.")
+    println(s"FAIL ${results.size} failures across ${resultsByClass.keys.size} classes.")
   }
 }
 
@@ -89,5 +103,5 @@ object Validate extends App with LazyLogging {
   if (report.conforms)
     println("OK")
   else
-    ValidationErrorPrinter.print(report)
+    ValidationErrorPrinter.print(report, shapesModel, dataModel)
 }
