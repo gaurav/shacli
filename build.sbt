@@ -15,6 +15,9 @@ libraryDependencies ++= {
     "com.typesafe.scala-logging"  %% "scala-logging"          % "3.9.2",
     "ch.qos.logback"              %  "logback-classic"        % "1.2.3",
 
+    // Import a SHACL library.
+    "org.topbraid"                % "shacl"                   % "1.3.0",
+
     // Add support for CSV
     "com.github.tototoshi"        %% "scala-csv"              % "1.3.6"
   )
