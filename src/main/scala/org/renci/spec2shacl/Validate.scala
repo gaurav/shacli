@@ -46,15 +46,27 @@ object ValidationErrorPrinter {
       if (statement == null) RDFS.Class
       else statement.getObject
     })
-    resultsByClass.toSeq.sortBy(_._2.size).foreach({ case (classNode, allResults) =>
-      println(s"Class has ${allResults.size} errors: $classNode")
+    resultsByClass.toSeq.sortBy(_._2.size).foreach({ case (classNode, classResults) =>
+      println(s"Class has ${classResults.size} errors: $classNode")
 
       // 2. Group results by target node.
-      val resultsByFocusNode = allResults.groupBy(_.getFocusNode)
-      resultsByFocusNode.toSeq.sortBy(_._2.size).foreach({ case (focusNode, results) =>
-        println(s" - Focus node has ${results.size} errors: $focusNode")
-        results.foreach({result =>
-          println(s"   - ${result.getPath}: ${result.getMessage}")
+      val resultsByFocusNode = classResults.groupBy(_.getFocusNode)
+      resultsByFocusNode.toSeq.sortBy(_._2.size).foreach({ case (focusNode, focusNodeResults) =>
+        println(s" - Focus node has ${focusNodeResults.size} errors: $focusNode")
+
+        val resultsByPath = focusNodeResults.groupBy(_.getPath)
+        resultsByPath.toSeq.sortBy(_._2.size).foreach({ case (pathNode, pathNodeResults) =>
+          println(s"   - ${pathNode}")
+          pathNodeResults.foreach(result => {
+            if (result.getValue == null)
+              println(s"     - ${result.getMessage}")
+            else
+              println(s"     - ${result.getValue}: ${result.getMessage}")
+          })
+        })
+
+        focusNodeResults.foreach({result =>
+
         })
       })
       println()
