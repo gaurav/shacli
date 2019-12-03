@@ -64,10 +64,6 @@ object ValidationErrorPrinter {
               println(s"     - ${result.getValue}: ${result.getMessage}")
           })
         })
-
-        focusNodeResults.foreach({result =>
-
-        })
       })
       println()
     })
