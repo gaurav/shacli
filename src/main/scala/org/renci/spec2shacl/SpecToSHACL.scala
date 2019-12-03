@@ -43,6 +43,7 @@ object SpecToSHACL extends App with LazyLogging {
        |@prefix sh: <http://www.w3.org/ns/shacl#> .
        |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
        |@prefix obo: <http://purl.obolibrary.org/obo/> .
+       |@prefix skos: <http://www.w3.org/2008/05/skos#> .
        |
        |@prefix BFO: <http://purl.obolibrary.org/obo/BFO_> .
        |@prefix CG: <http://dataexchange.clinicalgenome.org/CG_> .
@@ -94,6 +95,19 @@ object SpecToSHACL extends App with LazyLogging {
       // If dataType is set to an entity we already know about, that's our sh:class.
       val entitiesWithDataType = entities.filter(entity => attr("dataType").equals(entity("name")))
 
+      // Is this property part of a ValueSet? If so, add constraints to ensure that
+      // the value set has the right skos:inScheme. Note that this must be present,
+      // whether or not the property itself is present.
+      val valueSetConstraints = attr.get("@valueSetId").filter(!_.isEmpty).fold("")(valueSet => s"""
+        |  sh:property [
+        |    sh:name "${attr("name")} should be in ${attr.getOrElse("_valueSetLabel", valueSet)}" ;
+        |    sh:path ( ${attr("iri")} [ sh:inversePath SEPIO-CG:70004 ] ) ;
+        |    sh:hasValue $valueSet ;
+        |    sh:minCount 1 ;
+        |    sh:maxCount 1
+        |  ] ;
+        | """.stripMargin)
+
       // TODO: should we choose to close this definition using sh:closed?
       s"""  sh:property [
          |    sh:name "${attr("name")}" ;
@@ -104,7 +118,9 @@ object SpecToSHACL extends App with LazyLogging {
          |    ${ entitiesWithDataType.map(entity => s"sh:class ${entity("iri")} ; # ${entity("name")}").mkString("\n") }
          |    ${ entitiesWithDataType.map(entity => s"sh:node cgshapes:${entity("name")} ;").mkString("\n") }
          |    $cardinalityStr
-         |  ] ;""".stripMargin
+         |  ] ;
+         |  $valueSetConstraints
+         | """.stripMargin
     }).mkString("\n")
 
     // Do we even have an entityName?
