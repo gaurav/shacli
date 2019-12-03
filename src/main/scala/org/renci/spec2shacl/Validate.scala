@@ -4,17 +4,13 @@ import java.io.{File, FileWriter, PrintWriter}
 import java.time.ZonedDateTime
 import java.util.Calendar
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.{File, FileInputStream, IOException, InputStream, ByteArrayOutputStream}
 
 import org.topbraid.shacl.validation._
 import org.apache.jena.ontology.OntDocumentManager
 import org.apache.jena.ontology.OntModel
 import org.apache.jena.ontology.OntModelSpec
-import org.apache.jena.rdf.model.Model
-import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
 import org.apache.jena.util.FileUtils
 import org.topbraid.jenax.util.JenaUtil
 import org.topbraid.jenax.util.SystemTriples
@@ -56,7 +52,7 @@ object ValidationErrorPrinter {
 
         val resultsByPath = focusNodeResults.groupBy(_.getPath)
         resultsByPath.toSeq.sortBy(_._2.size).foreach({ case (pathNode, pathNodeResults) =>
-          println(s"   - ${pathNode}")
+          println(s"   - ${summarizeResource(pathNode)}")
           pathNodeResults.foreach(result => {
             if (result.getValue == null)
               println(s"     - ${result.getMessage}")
@@ -69,6 +65,19 @@ object ValidationErrorPrinter {
     })
 
     println(s"FAIL ${results.size} failures across ${resultsByClass.keys.size} classes.")
+  }
+
+  def summarizeResource(node: RDFNode): String = {
+    if (node.canAs(classOf[RDFList])) {
+      val list: RDFList = node.as(classOf[RDFList])
+      JavaConverters.asScalaBuffer(list.asJavaList).toSeq.map(summarizeResource(_)).mkString(", ")
+    } else if (node.asNode.isBlank) {
+      val byteArray = new ByteArrayOutputStream()
+      node.asResource.listProperties.toModel.write(byteArray, "TURTLE") // Accepts "JSON-LD"!
+      byteArray.toString.replaceAll("\n", " ").replaceAll("\t", " ").replaceAll("\\s+", " ")
+    } else {
+      node.toString
+    }
   }
 }
 
