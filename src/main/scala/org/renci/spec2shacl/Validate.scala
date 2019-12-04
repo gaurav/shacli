@@ -31,33 +31,46 @@ import scala.collection.JavaConverters;
  */
 
 object ValidationErrorPrinter {
-  def print(report: ValidationReport, shapesModel: OntModel, dataModel: OntModel): Unit = {
-    val results = JavaConverters.asScalaBuffer(report.results).toSeq
-
-    // 1. Group results by source shape.
-    val resultsByClass = results.groupBy({ result =>
-      val focusNode = result.getFocusNode
+  class ValidationResultWrapper(
+    shapesModel: OntModel,
+    dataModel: OntModel,
+    result: ValidationResult
+  ) {
+    val focusNode = result.getFocusNode
+    val focusNodeClass = {
       val statement = dataModel.getProperty(focusNode.asResource, RDF.`type`)
+      if (statement == null) RDFS.Class else statement.getObject
+    }
+    val path = result.getPath
+    val value = result.getValue
+    val message = result.getMessage
 
-      if (statement == null) RDFS.Class
-      else statement.getObject
-    })
+    val summarizedPath = summarizeResource(path)
+
+    override def toString(): String = {
+      if (value == null) message else s"${value}: ${message}"
+    }
+  }
+
+  def wrapResults(report: ValidationReport, shapesModel: OntModel, dataModel: OntModel) =
+    JavaConverters.asScalaBuffer(report.results).toSeq.map(new ValidationResultWrapper(shapesModel, dataModel, _))
+
+  def print(results: Seq[ValidationResultWrapper]): Unit = {
+    // 1. Group results by focus node class.
+    val resultsByClass = results.groupBy(_.focusNodeClass)
     resultsByClass.toSeq.sortBy(_._2.size).foreach({ case (classNode, classResults) =>
       println(s"Class has ${classResults.size} errors: $classNode")
 
       // 2. Group results by target node.
-      val resultsByFocusNode = classResults.groupBy(_.getFocusNode)
+      val resultsByFocusNode = classResults.groupBy(_.focusNode)
       resultsByFocusNode.toSeq.sortBy(_._2.size).foreach({ case (focusNode, focusNodeResults) =>
         println(s" - Focus node has ${focusNodeResults.size} errors: $focusNode")
 
-        val resultsByPath = focusNodeResults.groupBy(_.getPath)
+        val resultsByPath = focusNodeResults.groupBy(_.path)
         resultsByPath.toSeq.sortBy(_._2.size).foreach({ case (pathNode, pathNodeResults) =>
           println(s"   - ${summarizeResource(pathNode)}")
           pathNodeResults.foreach(result => {
-            if (result.getValue == null)
-              println(s"     - ${result.getMessage}")
-            else
-              println(s"     - ${result.getValue}: ${result.getMessage}")
+            println(s"     - ${result.toString}")
           })
         })
       })
@@ -120,5 +133,5 @@ object Validate extends App with LazyLogging {
   if (report.conforms)
     println("OK")
   else
-    ValidationErrorPrinter.print(report, shapesModel, dataModel)
+    ValidationErrorPrinter.print(ValidationErrorPrinter.wrapResults(report, shapesModel, dataModel))
 }
