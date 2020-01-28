@@ -7,7 +7,7 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 // Set up the main class.
-mainClass in Compile := Some("org.renci.spec2shacl.SpecToSHACL")
+mainClass in (Compile, run) := Some("org.renci.shacli.ShacliApp")
 
 libraryDependencies ++= {
   Seq(

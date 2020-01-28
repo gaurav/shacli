@@ -1,4 +1,4 @@
-package org.renci.spec2shacl
+package org.renci.shacli
 
 import java.io.{File, FileWriter, PrintWriter}
 import java.time.ZonedDateTime
@@ -100,7 +100,7 @@ object ValidationErrorPrinter {
  * TopBraid's SHACL engine.
  */
 
-object Validate extends App with LazyLogging {
+object ShacliApp extends App with LazyLogging {
   val shapesFile = new File(args(0))
   val dataFile = new File(args(1))
 
