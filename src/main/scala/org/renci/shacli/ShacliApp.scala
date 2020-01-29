@@ -77,7 +77,9 @@ object ValidationErrorGenerator {
   }
 
   def summarizeResource(node: RDFNode): String = {
-    if (node.canAs(classOf[RDFList])) {
+    if (node == null) {
+      "(null)"
+    } else if (node.canAs(classOf[RDFList])) {
       val list: RDFList = node.as(classOf[RDFList])
       JavaConverters.asScalaBuffer(list.asJavaList).toSeq.map(summarizeResource(_)).mkString(", ")
     } else if (node.asNode.isBlank) {
