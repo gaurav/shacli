@@ -22,6 +22,9 @@ libraryDependencies ++= {
     "org.topbraid"                % "shacl"                   % "1.3.0",
 
     // Add support for CSV
-    "com.github.tototoshi"        %% "scala-csv"              % "1.3.6"
+    "com.github.tototoshi"        %% "scala-csv"              % "1.3.6",
+
+    // Testing
+    "com.lihaoyi"                 %% "utest"                  % "0.7.2" % "test"
   )
 }
