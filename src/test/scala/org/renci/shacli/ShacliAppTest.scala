@@ -59,6 +59,7 @@ object ShacliAppTest extends TestSuite {
       assert(res.stdout contains "SHACLI: A SHACLI CLI")
       assert(res.stdout contains "-h, --help")
       assert(res.stdout contains "Show help message")
+      assert(res.stderr == "")
     }
 
     test("Whether Shacli validates a file as expected") {

@@ -9,6 +9,9 @@ scalacOptions in Test ++= Seq("-Yrangepos")
 // Set up the main class.
 mainClass in (Compile, run) := Some("org.renci.shacli.ShacliApp")
 
+// Fork when running.
+fork in run := true
+
 // Set up testing.
 testFrameworks += new TestFramework("utest.runner.Framework")
 
