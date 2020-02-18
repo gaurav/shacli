@@ -3,7 +3,9 @@ licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
 
 // Scalac options.
 scalaVersion := "2.12.10"
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ywarn-unused")
+
+addCompilerPlugin(scalafixSemanticdb)
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 // Set up the main class.
@@ -15,6 +17,15 @@ fork in run := true
 // Set up testing.
 testFrameworks += new TestFramework("utest.runner.Framework")
 
+// Code formatting and linting tools.
+wartremoverWarnings ++= Warts.unsafe
+
+addCommandAlias(
+  "scalafixCheckAll",
+  "; compile:scalafix --check ; test:scalafix --check"
+)
+
+// Library dependencies.
 libraryDependencies ++= {
   Seq(
     // Logging
