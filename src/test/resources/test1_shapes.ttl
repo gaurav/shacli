@@ -1,0 +1,21 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+@prefix example: <http://example.org/> .
+
+# A simple SHACL example.
+
+example:Dog a rdfs:Class ;
+  rdfs:label "Dogs"@en
+.
+
+example:DogShape a sh:NodeShape ;
+  sh:targetClass example:Dog ;
+  sh:property [
+    sh:path foaf:name ;
+    sh:minCount 1 ;
+    sh:maxCount 1
+  ]
+.

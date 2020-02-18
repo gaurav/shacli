@@ -1,0 +1,12 @@
+# Scala setup.
+language: scala
+scala:
+  - "2.12.8"
+jdk:
+  - openjdk8
+
+# Cache Maven and SBT packages so we don't need to keep reinstalling them.
+cache:
+  directories:
+  - $HOME/.m2
+  - $HOME/.sbt
