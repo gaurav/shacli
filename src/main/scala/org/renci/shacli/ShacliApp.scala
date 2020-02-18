@@ -96,6 +96,8 @@ object ValidationErrorGenerator {
  * Command line configuration for Validate.
  */
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
+  val version = getClass.getPackage.getImplementationVersion
+  version("SHACLI: A SHACLI CLI v" + version)
   val shapes = trailArg[File](
     descr = "Shapes file to validate (in Turtle)"
   )
