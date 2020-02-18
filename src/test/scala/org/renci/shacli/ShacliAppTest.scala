@@ -59,7 +59,6 @@ object ShacliAppTest extends TestSuite {
       assert(res.stdout contains "SHACLI: A SHACLI CLI")
       assert(res.stdout contains "-h, --help")
       assert(res.stdout contains "Show help message")
-      assert(res.stderr == "")
     }
 
     test("Whether Shacli validates a file as expected") {
@@ -72,7 +71,6 @@ object ShacliAppTest extends TestSuite {
       assert(res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2")
       assert(res.stdout contains "[info] 1 errors displayed")
       assert(res.stdout contains "Nonzero exit code returned from runner: 1")
-      assert(res.stderr == "")
     }
   }
 }
