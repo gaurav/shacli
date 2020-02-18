@@ -20,6 +20,12 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 // Code formatting and linting tools.
 wartremoverWarnings ++= Warts.unsafe
 
+addCommandAlias(
+  "scalafixCheckAll",
+  "; compile:scalafix --check ; test:scalafix --check"
+)
+
+// Library dependencies.
 libraryDependencies ++= {
   Seq(
     // Logging

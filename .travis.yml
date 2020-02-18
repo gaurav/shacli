@@ -10,3 +10,8 @@ cache:
   directories:
   - $HOME/.m2
   - $HOME/.sbt
+
+# Make sure that Scalafmt and Scalafix are happy with the code.
+after_success:
+  - sbt ++$TRAVIS_SCALA_VERSION scalafmtCheckAll
+  - sbt ++$TRAVIS_SCALA_VERSION scalafixCheckAll
