@@ -1,0 +1,37 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "sh": "http://www.w3.org/ns/shacl#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "example": "http://example.org/",
+
+    "dogs": {
+      "@id": "example:dogs",
+      "@container": "@set"
+    },
+
+    "name": {
+      "@id": "foaf:name",
+      "@type": "xsd:string"
+    },
+
+    "age": {
+      "@id": "foaf:age",
+      "@type": "xsd:integer"
+    }
+  },
+
+  "dogs": [
+    {
+      "@id": "example:Shadow",
+      "@type": "example:Dog",
+      "name": [
+        "Shadow",
+        "Shadow The Sheepdog"
+      ],
+      "age": 1
+    }
+  ]
+}
