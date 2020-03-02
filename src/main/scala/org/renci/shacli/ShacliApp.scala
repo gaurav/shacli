@@ -2,13 +2,13 @@ package org.renci.shacli
 
 import java.io.File
 
-import java.io.{InputStream, File, FileInputStream, ByteArrayOutputStream, StringWriter}
+import java.io.{InputStream, File, ByteArrayOutputStream, StringWriter}
 
 import org.topbraid.shacl.validation._
-import org.apache.jena.ontology.OntDocumentManager
 import org.apache.jena.ontology.OntModel
 import org.apache.jena.ontology.OntModelSpec
 import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
+import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
 import org.topbraid.jenax.util.JenaUtil
 import org.topbraid.jenax.util.SystemTriples
@@ -40,7 +40,7 @@ object ValidationErrorGenerator {
   def generate(
     report: ValidationReport,
     shapesModel: OntModel,
-    dataModel: OntModel
+    dataModel: Model
   ): Seq[ValidationError] = {
     val results = JavaConverters.asScalaBuffer(report.results).toSeq
 
@@ -134,30 +134,22 @@ object ShacliApp extends App with LazyLogging {
   val onlyConstraints: List[String]   = conf.only()
   val ignoreConstraints: List[String] = conf.ignore()
 
-  // Set up the base model.
-  val dm   = new OntDocumentManager()
-  val spec = new OntModelSpec(OntModelSpec.OWL_MEM)
-
   // Load SHACL.
   val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
   val shacl: Model          = JenaUtil.createMemoryModel()
   shacl.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
   shacl.add(SystemTriples.getVocabularyModel())
-  dm.addModel(SH.BASE_URI, shacl)
-
-  spec.setDocumentManager(dm);
 
   // Load the shapes.
-  val shapesModel: OntModel = ModelFactory.createOntologyModel(spec)
-  shapesModel.read(new FileInputStream(shapesFile), "urn:x:base", FileUtils.langTurtle)
+  val shapesModel: Model       = RDFDataMgr.loadModel(shapesFile.toString)
+  val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
 
   // Load the data model.
-  val dataModel: OntModel = ModelFactory.createOntologyModel(spec)
-  dataModel.read(new FileInputStream(dataFile), "urn:x:base", FileUtils.langTurtle)
+  val dataModel: Model = RDFDataMgr.loadModel(dataFile.toString);
 
   // Create a validation engine.
-  val engine
-    : ValidationEngine = ValidationUtil.createValidationEngine(dataModel, shapesModel, true);
+  val engine: ValidationEngine =
+    ValidationUtil.createValidationEngine(dataModel, shapesOntModel, true);
   engine.validateAll()
   val report = engine.getValidationReport
 
@@ -165,7 +157,7 @@ object ShacliApp extends App with LazyLogging {
     println("OK")
     System.exit(0)
   } else {
-    val errors = ValidationErrorGenerator.generate(report, shapesModel, dataModel)
+    val errors = ValidationErrorGenerator.generate(report, shapesOntModel, dataModel)
 
     def stringEndsWithOneOf(str: String, oneOf: Seq[String]): Boolean =
       oneOf.exists(str.endsWith(_))
