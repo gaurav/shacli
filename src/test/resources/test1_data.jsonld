@@ -23,6 +23,7 @@
     }
   },
 
+  "@id": "http://example.org/test1_data.jsonld",
   "dogs": [
     {
       "@id": "example:Shadow",
