@@ -11,3 +11,14 @@ example:Shadow a example:Dog ;
   foaf:name "Shadow The Sheepdog" ;
   foaf:age 1
 .
+
+example:Buck a example:Dog ;
+  foaf:name "Buck" ;
+  foaf:age 2
+.
+
+# A non-dog so we know it was not tested.
+example:CheshireCat foaf:name "Cheshire Cat" ;
+  foaf:name "Unitary Authority of Warrington Cat" ;
+  foaf:age 232
+.
