@@ -12,6 +12,7 @@ import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
 import org.topbraid.jenax.util.JenaUtil
 import org.topbraid.jenax.util.SystemTriples
+import org.topbraid.jenax.progress.SimpleProgressMonitor
 import org.topbraid.shacl.util.SHACLSystemModel
 import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
@@ -19,7 +20,9 @@ import org.apache.jena.vocabulary.RDFS
 import org.rogach.scallop._
 
 import com.typesafe.scalalogging.LazyLogging
-import scala.collection.JavaConverters;
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /*
  * Better validation errors for SHACL
@@ -42,7 +45,7 @@ object ValidationErrorGenerator {
     shapesModel: OntModel,
     dataModel: Model
   ): Seq[ValidationError] = {
-    val results = JavaConverters.asScalaBuffer(report.results).toSeq
+    val results = report.results.asScala.toSeq
 
     // 1. Group results by source shape.
     val resultsByClass = results.groupBy({ result =>
@@ -88,7 +91,7 @@ object ValidationErrorGenerator {
       "(null)"
     } else if (node.canAs(classOf[RDFList])) {
       val list: RDFList = node.as(classOf[RDFList])
-      JavaConverters.asScalaBuffer(list.asJavaList).toSeq.map(summarizeResource(_)).mkString(", ")
+      list.asJavaList.asScala.toSeq.map(summarizeResource(_)).mkString(", ")
     } else if (node.asNode.isBlank) {
       val byteArray = new ByteArrayOutputStream()
       node.asResource.listProperties.toModel.write(byteArray, "TURTLE") // Accepts "JSON-LD"!
@@ -134,24 +137,60 @@ object ShacliApp extends App with LazyLogging {
   val onlyConstraints: List[String]   = conf.only()
   val ignoreConstraints: List[String] = conf.ignore()
 
-  // Load SHACL.
-  val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
-  val shacl: Model          = JenaUtil.createMemoryModel()
-  shacl.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
-  shacl.add(SystemTriples.getVocabularyModel())
-
   // Load the shapes.
   val shapesModel: Model       = RDFDataMgr.loadModel(shapesFile.toString)
+
+  // Load SHACL and Dash.
+  val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
+  shapesModel.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
+
+  val dashTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/dash.ttl")
+  shapesModel.read(dashTTL, SH.BASE_URI, FileUtils.langTurtle)
+
+  // Load system ontology.
+  shapesModel.add(SystemTriples.getVocabularyModel())
+
   val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
 
   // Load the data model.
   val dataModel: Model = RDFDataMgr.loadModel(dataFile.toString);
+  val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
+  logger.info(s"Resources to check: ${resourcesToCheck}")
 
   // Create a validation engine.
+  val config: ValidationEngineConfiguration = new ValidationEngineConfiguration()
+    .setReportDetails(true)
+    .setValidateShapes(true)
+
   val engine: ValidationEngine =
-    ValidationUtil.createValidationEngine(dataModel, shapesOntModel, true);
+    ValidationUtil.createValidationEngine(dataModel, shapesOntModel, config)
+
+  // Track progress.
+  // TODO: Implement a progress monitor so we can track long-running jobs.
+  // engine.setProgressMonitor(new SimpleProgressMonitor("Progress"))
+
+  // Count off validated nodes.
+  val resourcesCheckedSet: mutable.Set[RDFNode] = mutable.Set()
+  engine.setFocusNodeFilter(rdfNode => {
+    logger.info(s"Checking focus node ${rdfNode}")
+    resourcesCheckedSet.add(rdfNode)
+    true
+  })
+
   engine.validateAll()
   val report = engine.getValidationReport
+
+  // Report on any nodes that were not checked.
+  val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
+  val resourcesNotChecked = resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
+
+  logger.info(f"${resourcesChecked.size}%,d resources checked.")
+  if (!resourcesNotChecked.isEmpty) {
+    logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
+    resourcesNotChecked.foreach(rdfNode => {
+      logger.warn(s"Resource ${rdfNode} was not checked.")
+    })
+  }
 
   if (report.conforms) {
     println("OK")
@@ -209,8 +248,7 @@ object ShacliApp extends App with LazyLogging {
                   val focusNodeModel =
                     focusNode.inModel(dataModel).asResource.listProperties.toModel
                   focusNodeModel.setNsPrefixes(
-                    JavaConverters
-                      .mapAsJavaMap(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_"))
+                    Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava
                   )
 
                   val stringWriter = new StringWriter
