@@ -155,7 +155,7 @@ object ShacliApp extends App with LazyLogging {
   // Load the data model.
   val dataModel: Model = RDFDataMgr.loadModel(dataFile.toString);
   val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
-  logger.info(s"Resources to check: ${resourcesToCheck}")
+  logger.debug(s"Resources to check: ${resourcesToCheck}")
 
   // Create a validation engine.
   val config: ValidationEngineConfiguration = new ValidationEngineConfiguration()
@@ -184,13 +184,15 @@ object ShacliApp extends App with LazyLogging {
   val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
   val resourcesNotChecked = resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
 
-  logger.info(f"${resourcesChecked.size}%,d resources checked.")
   if (!resourcesNotChecked.isEmpty) {
-    logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
     resourcesNotChecked.foreach(rdfNode => {
-      logger.warn(s"Resource ${rdfNode} was not checked.")
+      val types = rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getObject)
+      val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate)
+      logger.warn(s"Resource ${rdfNode} (${types}, ${props}) was not checked.")
     })
+    logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
   }
+  logger.info(f"${resourcesChecked.size}%,d resources checked.")
 
   if (report.conforms) {
     println("OK")
