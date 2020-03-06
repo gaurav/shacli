@@ -54,7 +54,7 @@ object ShacliAppTest extends TestSuite {
       // Turtle file (example:CheshireCat) that was not validated.
       assert(res.stdout contains "2 resources checked.")
       assert(res.stdout contains "1 resources NOT checked.")
-      assert(res.stdout contains "Resource http://example.org/CheshireCat was not checked.")
+      assert(res.stdout contains "Resource http://example.org/CheshireCat (types: none; props: foaf:age) was not checked.")
     }
 
     test("Whether Shacli validates a JSON-LD file as expected") {

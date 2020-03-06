@@ -184,11 +184,25 @@ object ShacliApp extends App with LazyLogging {
   val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
   val resourcesNotChecked = resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
 
+  /** Summarize a set of URIs as a string. */
+  def getShortenedURIs(nodes: Seq[Resource]): String = {
+    if (nodes.isEmpty) return "none" else
+    return nodes.map(node => {
+      // Try to use either the data model or the shape model to shorten URLs.
+      val dataModelQName = dataModel.qnameFor(node.getURI)
+      val shapesModelQName = shapesModel.qnameFor(node.getURI)
+
+      return if (dataModelQName != null) dataModelQName
+      else if(shapesModelQName != null) shapesModelQName
+      else node.getURI
+    }).mkString(", ")
+  }
+
   if (!resourcesNotChecked.isEmpty) {
     resourcesNotChecked.foreach(rdfNode => {
-      val types = rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getObject)
-      val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate)
-      logger.warn(s"Resource ${rdfNode} (${types}, ${props}) was not checked.")
+      val types = rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
+      val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
+      logger.warn(s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked.")
     })
     logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
   }
