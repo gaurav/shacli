@@ -5,8 +5,7 @@ import java.io.File
 import java.io.{InputStream, File, ByteArrayOutputStream, StringWriter}
 
 import org.topbraid.shacl.validation._
-import org.apache.jena.ontology.OntModel
-import org.apache.jena.ontology.OntModelSpec
+import org.apache.jena.ontology.{OntModel, OntModelSpec}
 import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
@@ -152,11 +151,7 @@ object ShacliApp extends App with LazyLogging {
   val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
 
   // Load SHACL and Dash.
-  val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
-  shapesModel.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
-
-  val dashTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/dash.ttl")
-  shapesModel.read(dashTTL, SH.BASE_URI, FileUtils.langTurtle)
+  shapesModel.add(SHACLSystemModel.getSHACLModel)
 
   // Load system ontology.
   shapesModel.add(SystemTriples.getVocabularyModel())
