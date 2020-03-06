@@ -136,7 +136,7 @@ object ShacliApp extends App with LazyLogging {
   val ignoreConstraints: List[String] = conf.ignore()
 
   // Load the shapes.
-  val shapesModel: Model       = RDFDataMgr.loadModel(shapesFile.toString)
+  val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
 
   // Load SHACL and Dash.
   val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
@@ -151,7 +151,7 @@ object ShacliApp extends App with LazyLogging {
   val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
 
   // Load the data model.
-  val dataModel: Model = RDFDataMgr.loadModel(dataFile.toString);
+  val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
   val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
   logger.debug(s"Resources to check: ${resourcesToCheck}")
 
@@ -180,27 +180,34 @@ object ShacliApp extends App with LazyLogging {
 
   // Report on any nodes that were not checked.
   val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
-  val resourcesNotChecked: Seq[Resource] = resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
+  val resourcesNotChecked: Seq[Resource] =
+    resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
 
   /** Summarize a set of URIs as a string. */
   def getShortenedURIs(nodes: Seq[Resource]): String = {
-    if (nodes.isEmpty) return "none" else
-    return nodes.map(node => {
-      // Try to use either the data model or the shape model to shorten URLs.
-      val dataModelQName = dataModel.qnameFor(node.getURI)
-      val shapesModelQName = shapesModel.qnameFor(node.getURI)
+    if (nodes.isEmpty) return "none"
+    else
+      return nodes
+        .map(node => {
+          // Try to use either the data model or the shape model to shorten URLs.
+          val dataModelQName   = dataModel.qnameFor(node.getURI)
+          val shapesModelQName = shapesModel.qnameFor(node.getURI)
 
-      return if (dataModelQName != null) dataModelQName
-      else if(shapesModelQName != null) shapesModelQName
-      else node.getURI
-    }).mkString(", ")
+          return if (dataModelQName != null) dataModelQName
+          else if (shapesModelQName != null) shapesModelQName
+          else node.getURI
+        })
+        .mkString(", ")
   }
 
   if (!resourcesNotChecked.isEmpty) {
     resourcesNotChecked.foreach(rdfNode => {
-      val types = rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
+      val types =
+        rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
       val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
-      logger.warn(s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked.")
+      logger.warn(
+        s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked."
+      )
     })
     logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
   }
@@ -261,9 +268,8 @@ object ShacliApp extends App with LazyLogging {
                   // Display focusNode as Turtle.
                   val focusNodeModel =
                     focusNode.inModel(dataModel).asResource.listProperties.toModel
-                  focusNodeModel.setNsPrefixes(
-                    Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava
-                  )
+                  focusNodeModel
+                    .setNsPrefixes(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava)
 
                   val stringWriter = new StringWriter
                   focusNodeModel.write(stringWriter, "Turtle")
