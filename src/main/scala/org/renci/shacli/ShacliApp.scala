@@ -89,7 +89,11 @@ object ValidationErrorGenerator {
       "(null)"
     } else if (node.canAs(classOf[RDFList])) {
       val list: RDFList = node.as(classOf[RDFList])
-      list.asJavaList.asScala.toSeq.map(summarizeResource(_)).mkString(", ")
+      list.asJavaList // Convert the JavaList into a java.util.List<RDFNode>,
+      .asScala        // which we then convert into a Scala Buffer, and then
+      .toSeq          // to a Seq.
+        .map(summarizeResource(_))
+        .mkString(", ")
     } else if (node.asNode.isBlank) {
       val byteArray = new ByteArrayOutputStream()
       node.asResource.listProperties.toModel.write(byteArray, "TURTLE") // Accepts "JSON-LD"!
