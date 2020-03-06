@@ -10,9 +10,7 @@ import org.apache.jena.ontology.OntModelSpec
 import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
-import org.topbraid.jenax.util.JenaUtil
 import org.topbraid.jenax.util.SystemTriples
-import org.topbraid.jenax.progress.SimpleProgressMonitor
 import org.topbraid.shacl.util.SHACLSystemModel
 import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
@@ -182,7 +180,7 @@ object ShacliApp extends App with LazyLogging {
 
   // Report on any nodes that were not checked.
   val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
-  val resourcesNotChecked = resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
+  val resourcesNotChecked: Seq[Resource] = resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
 
   /** Summarize a set of URIs as a string. */
   def getShortenedURIs(nodes: Seq[Resource]): String = {
