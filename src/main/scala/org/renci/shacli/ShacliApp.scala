@@ -10,7 +10,6 @@ import org.apache.jena.ontology.OntModelSpec
 import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
-import org.topbraid.jenax.util.JenaUtil
 import org.topbraid.jenax.util.SystemTriples
 import org.topbraid.shacl.util.SHACLSystemModel
 import org.topbraid.shacl.vocabulary.SH
@@ -19,7 +18,9 @@ import org.apache.jena.vocabulary.RDFS
 import org.rogach.scallop._
 
 import com.typesafe.scalalogging.LazyLogging
-import scala.collection.JavaConverters;
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /*
  * Better validation errors for SHACL
@@ -42,7 +43,7 @@ object ValidationErrorGenerator {
     shapesModel: OntModel,
     dataModel: Model
   ): Seq[ValidationError] = {
-    val results = JavaConverters.asScalaBuffer(report.results).toSeq
+    val results = report.results.asScala.toSeq
 
     // 1. Group results by source shape.
     val resultsByClass = results.groupBy({ result =>
@@ -88,7 +89,11 @@ object ValidationErrorGenerator {
       "(null)"
     } else if (node.canAs(classOf[RDFList])) {
       val list: RDFList = node.as(classOf[RDFList])
-      JavaConverters.asScalaBuffer(list.asJavaList).toSeq.map(summarizeResource(_)).mkString(", ")
+      list.asJavaList // Convert the JavaList into a java.util.List<RDFNode>,
+      .asScala        // which we then convert into a Scala Buffer, and then
+      .toSeq          // to a Seq.
+        .map(summarizeResource(_))
+        .mkString(", ")
     } else if (node.asNode.isBlank) {
       val byteArray = new ByteArrayOutputStream()
       node.asResource.listProperties.toModel.write(byteArray, "TURTLE") // Accepts "JSON-LD"!
@@ -134,24 +139,83 @@ object ShacliApp extends App with LazyLogging {
   val onlyConstraints: List[String]   = conf.only()
   val ignoreConstraints: List[String] = conf.ignore()
 
-  // Load SHACL.
-  val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
-  val shacl: Model          = JenaUtil.createMemoryModel()
-  shacl.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
-  shacl.add(SystemTriples.getVocabularyModel())
-
   // Load the shapes.
-  val shapesModel: Model       = RDFDataMgr.loadModel(shapesFile.toString)
+  val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
+
+  // Load SHACL and Dash.
+  val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
+  shapesModel.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
+
+  val dashTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/dash.ttl")
+  shapesModel.read(dashTTL, SH.BASE_URI, FileUtils.langTurtle)
+
+  // Load system ontology.
+  shapesModel.add(SystemTriples.getVocabularyModel())
+
   val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
 
   // Load the data model.
-  val dataModel: Model = RDFDataMgr.loadModel(dataFile.toString);
+  val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
+  val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
+  logger.debug(s"Resources to check: ${resourcesToCheck}")
 
   // Create a validation engine.
+  val config: ValidationEngineConfiguration = new ValidationEngineConfiguration()
+    .setReportDetails(true)
+    .setValidateShapes(true)
+
   val engine: ValidationEngine =
-    ValidationUtil.createValidationEngine(dataModel, shapesOntModel, true);
+    ValidationUtil.createValidationEngine(dataModel, shapesOntModel, config)
+
+  // Track progress.
+  // TODO: Implement a progress monitor so we can track long-running jobs.
+  // engine.setProgressMonitor(new SimpleProgressMonitor("Progress"))
+
+  // Count off validated nodes.
+  val resourcesCheckedSet: mutable.Set[RDFNode] = mutable.Set()
+  engine.setFocusNodeFilter(rdfNode => {
+    logger.info(s"Checking focus node ${rdfNode}")
+    resourcesCheckedSet.add(rdfNode)
+    true
+  })
+
   engine.validateAll()
   val report = engine.getValidationReport
+
+  // Report on any nodes that were not checked.
+  val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
+  val resourcesNotChecked: Seq[Resource] =
+    resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
+
+  /** Summarize a set of URIs as a string. */
+  def getShortenedURIs(nodes: Seq[Resource]): String = {
+    if (nodes.isEmpty) return "none"
+    else
+      return nodes
+        .map(node => {
+          // Try to use either the data model or the shape model to shorten URLs.
+          val dataModelQName   = dataModel.qnameFor(node.getURI)
+          val shapesModelQName = shapesModel.qnameFor(node.getURI)
+
+          return if (dataModelQName != null) dataModelQName
+          else if (shapesModelQName != null) shapesModelQName
+          else node.getURI
+        })
+        .mkString(", ")
+  }
+
+  if (!resourcesNotChecked.isEmpty) {
+    resourcesNotChecked.foreach(rdfNode => {
+      val types =
+        rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
+      val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
+      logger.warn(
+        s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked."
+      )
+    })
+    logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
+  }
+  logger.info(f"${resourcesChecked.size}%,d resources checked.")
 
   if (report.conforms) {
     println("OK")
@@ -208,10 +272,8 @@ object ShacliApp extends App with LazyLogging {
                   // Display focusNode as Turtle.
                   val focusNodeModel =
                     focusNode.inModel(dataModel).asResource.listProperties.toModel
-                  focusNodeModel.setNsPrefixes(
-                    JavaConverters
-                      .mapAsJavaMap(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_"))
-                  )
+                  focusNodeModel
+                    .setNsPrefixes(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava)
 
                   val stringWriter = new StringWriter
                   focusNodeModel.write(stringWriter, "Turtle")

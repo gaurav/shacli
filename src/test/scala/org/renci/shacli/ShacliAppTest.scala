@@ -49,6 +49,14 @@ object ShacliAppTest extends TestSuite {
       )
       assert(res.stdout contains "[info] 1 errors displayed")
       assert(res.stdout contains "Nonzero exit code returned from runner: 1")
+
+      // Additionally, we should provide a warning: there is a resource in the
+      // Turtle file (example:CheshireCat) that was not validated.
+      assert(res.stdout contains "2 resources checked.")
+      assert(res.stdout contains "1 resources NOT checked.")
+      assert(
+        res.stdout contains "Resource http://example.org/CheshireCat (types: none; props: foaf:age) was not checked."
+      )
     }
 
     test("Whether Shacli validates a JSON-LD file as expected") {
