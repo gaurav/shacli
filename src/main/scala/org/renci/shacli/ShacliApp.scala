@@ -16,8 +16,9 @@ import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
 import org.rogach.scallop._
+import org.rogach.scallop.exceptions._
 
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -107,7 +108,15 @@ object ValidationErrorGenerator {
 /**
   * Command line configuration for Validate.
   */
-class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
+class Conf(arguments: Seq[String], logger: Logger) extends ScallopConf(arguments) {
+  override def onError(e: Throwable) = e match {
+    case ScallopException(message) =>
+      printHelp
+      logger.error(message)
+      System.exit(1)
+    case ex => super.onError(ex)
+  }
+
   val version = getClass.getPackage.getImplementationVersion
   version("SHACLI: A SHACLI CLI v" + version)
   val shapes: ScallopOption[File] = trailArg[File](descr = "Shapes file to validate (in Turtle)")
@@ -132,7 +141,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   */
 object ShacliApp extends App with LazyLogging {
   // Parse command line arguments.
-  val conf = new Conf(args)
+  val conf = new Conf(args, logger)
 
   val shapesFile: File                = conf.shapes()
   val dataFile: File                  = conf.data()
