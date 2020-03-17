@@ -43,8 +43,11 @@ libraryDependencies ++= {
     // Import Apache Jena to read JSON-LD.
     "org.apache.jena"             % "jena-core"               % "3.14.0",
 
+    // https://mvnrepository.com/artifact/org.apache.jena/jena-arq
+    "org.apache.jena"             % "jena-arq"                % "3.14.0",
+
     // Import a SHACL library.
-    "org.topbraid"                % "shacl"                   % "1.3.0",
+    "org.topbraid"                % "shacl"                   % "1.3.1",
 
     // Add support for CSV
     "com.github.tototoshi"        %% "scala-csv"              % "1.3.6",

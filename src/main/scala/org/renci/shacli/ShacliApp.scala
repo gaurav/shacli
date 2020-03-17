@@ -5,8 +5,7 @@ import java.io.File
 import java.io.{InputStream, File, ByteArrayOutputStream, StringWriter}
 
 import org.topbraid.shacl.validation._
-import org.apache.jena.ontology.OntModel
-import org.apache.jena.ontology.OntModelSpec
+import org.apache.jena.ontology.{OntModel, OntModelSpec}
 import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
@@ -152,11 +151,9 @@ object ShacliApp extends App with LazyLogging {
   val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
 
   // Load SHACL and Dash.
-  val shaclTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/shacl.ttl")
-  shapesModel.read(shaclTTL, SH.BASE_URI, FileUtils.langTurtle)
-
   val dashTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/dash.ttl")
   shapesModel.read(dashTTL, SH.BASE_URI, FileUtils.langTurtle)
+  shapesModel.add(SHACLSystemModel.getSHACLModel)
 
   // Load system ontology.
   shapesModel.add(SystemTriples.getVocabularyModel())
@@ -204,28 +201,43 @@ object ShacliApp extends App with LazyLogging {
       if (nodes.isEmpty) return "none"
       else
         return nodes
-          .map(node => {
-            // Try to use either the data model or the shape model to shorten URLs.
-            val dataModelQName   = dataModel.qnameFor(node.getURI)
-            val shapesModelQName = shapesModel.qnameFor(node.getURI)
+            .map(node => {
+              // Try to use either the data model or the shape model to shorten URLs.
+              val dataModelQName   = dataModel.qnameFor(node.getURI)
+              val shapesModelQName = shapesModel.qnameFor(node.getURI)
 
-            return if (dataModelQName != null) dataModelQName
-            else if (shapesModelQName != null) shapesModelQName
-            else node.getURI
-          })
-          .mkString(", ")
+              if (dataModelQName != null) dataModelQName
+              else if (shapesModelQName != null) shapesModelQName
+              else node.getURI
+            })
+            .mkString(", ")
     }
 
     if (!resourcesNotChecked.isEmpty) {
-      resourcesNotChecked.foreach(rdfNode => {
-        val types =
-          rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
-        val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
-        logger.warn(
-          s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked."
-        )
-      })
-      logger.warn(f"${resourcesNotChecked.size}%,d resources NOT checked.")
+      val filteredResourcesNotChecked = resourcesNotChecked
+        .filter(rdfNode => {
+          // Filter out any RDF Nodes that appear to be well-formed rdf:List.
+          // This means they should have *both* rdf:first and rdf:rest.
+          val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSet
+
+          if (
+            props.size == 2 &&
+            (props contains RDF.first) &&
+            (props contains RDF.rest)
+          ) false
+          else true
+        })
+
+      filteredResourcesNotChecked
+        .foreach(rdfNode => {
+          val types =
+            rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
+          val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
+          logger.warn(
+            s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked."
+          )
+        })
+      logger.warn(f"${filteredResourcesNotChecked.size}%,d resources NOT checked.")
     }
     logger.info(f"${resourcesChecked.size}%,d resources checked.")
 

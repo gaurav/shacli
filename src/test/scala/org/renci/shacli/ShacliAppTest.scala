@@ -45,18 +45,22 @@ object ShacliAppTest extends TestSuite {
       assert(res.exitCode == 1)
       assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
+      assert(res.stdout contains "Node http://example.org/Buck (1 errors)")
       assert(
         res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2"
       )
-      assert(res.stdout contains "[info] 1 errors displayed")
+      assert(res.stdout contains "[info] 2 errors displayed")
       assert(res.stdout contains "Nonzero exit code returned from runner: 1")
+
+      // Make sure we detect that the list in Buck foaf:depiction is broken.
+      assert(res.stdout contains "[http://www.w3.org/ns/shacl#NodeConstraintComponent] Value does not have shape dash:ListShape")
 
       // Additionally, we should provide a warning: there is a resource in the
       // Turtle file (example:CheshireCat) that was not validated.
       assert(res.stdout contains "2 resources checked.")
-      assert(res.stdout contains "1 resources NOT checked.")
+      assert(res.stdout contains "3 resources NOT checked.")
       assert(
-        res.stdout contains "Resource http://example.org/CheshireCat (types: none; props: foaf:age) was not checked."
+        res.stdout contains "Resource http://example.org/CheshireCat (types: none; props: foaf:depiction, foaf:age, foaf:name, foaf:name) was not checked."
       )
     }
 
@@ -84,10 +88,15 @@ object ShacliAppTest extends TestSuite {
       assert(res.exitCode == 1)
       assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
+
+      // Make sure we detect that the list in Buck foaf:depiction is broken.
+      assert(res.stdout contains "Node http://example.org/Buck (1 errors)")
+      assert(res.stdout contains "[http://www.w3.org/ns/shacl#NodeConstraintComponent] Value does not have shape dash:ListShape")
+
       assert(
         res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2"
       )
-      assert(res.stdout contains "[info] 1 errors displayed")
+      assert(res.stdout contains "[info] 2 errors displayed")
       assert(res.stdout contains "Nonzero exit code returned from runner: 1")
       assert(res.stdout contains "test1_data.ttl FAILED VALIDATION")
       assert(res.stdout contains "test1_data.jsonld FAILED VALIDATION")

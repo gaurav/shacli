@@ -20,6 +20,11 @@
     "age": {
       "@id": "foaf:age",
       "@type": "xsd:integer"
+    },
+
+    "depiction": {
+      "@id": "foaf:depiction",
+      "@container": "@list"
     }
   },
 
@@ -33,6 +38,19 @@
         "Shadow The Sheepdog"
       ],
       "age": 1
+    },
+    {
+      "@id": "example:CheshireCat",
+      "@type": "example:Cat",
+      "name": [
+        "Cheshire Cat",
+        "Unitary Authority of Warrington Cat"
+      ],
+      "age": 232,
+      "depiction": [
+        "https://upload.wikimedia.org/wikipedia/commons/a/ab/Tennel_Cheshire_proof.png",
+        "https://upload.wikimedia.org/wikipedia/en/4/4b/Cheshire_Cat_McGee.jpg"
+      ]
     }
   ]
 }
