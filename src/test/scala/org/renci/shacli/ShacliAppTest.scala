@@ -41,7 +41,7 @@ object ShacliAppTest extends TestSuite {
       val test1shapes = new File(getClass.getResource("/test1_shapes.ttl").toURI)
       val test1data   = new File(getClass.getResource("/test1_data.ttl").toURI)
 
-      val res = exec(Seq("sbt", s"run $test1shapes $test1data"))
+      val res = exec(Seq("sbt", s"run validate $test1shapes $test1data"))
       assert(res.exitCode == 1)
       assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
@@ -68,7 +68,7 @@ object ShacliAppTest extends TestSuite {
       val test1shapes = new File(getClass.getResource("/test1_shapes.ttl").toURI)
       val test1data   = new File(getClass.getResource("/test1_data.jsonld").toURI)
 
-      val res = exec(Seq("sbt", s"run $test1shapes $test1data"))
+      val res = exec(Seq("sbt", s"run validate $test1shapes $test1data"))
       assert(res.exitCode == 1)
       assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
@@ -84,7 +84,7 @@ object ShacliAppTest extends TestSuite {
       val test1data_ttl    = new File(getClass.getResource("/test1_data.ttl").toURI)
       val test1data_jsonld = new File(getClass.getResource("/test1_data.jsonld").toURI)
 
-      val res = exec(Seq("sbt", s"run $test1shapes $test1data_ttl $test1data_jsonld"))
+      val res = exec(Seq("sbt", s"run validate $test1shapes $test1data_ttl $test1data_jsonld"))
       assert(res.exitCode == 1)
       assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")

@@ -105,6 +105,211 @@ object ValidationErrorGenerator {
 }
 
 /**
+ * Validator
+ */
+object Validator {
+  def validate(logger: Logger, conf: Conf): Int = {
+    val shapesFile: File                = conf.validate.shapes()
+    val dataFiles: List[File]           = conf.validate.data()
+    val onlyConstraints: List[String]   = conf.validate.only()
+    val ignoreConstraints: List[String] = conf.validate.ignore()
+
+    // Load the shapes.
+    val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
+
+    // Load SHACL and Dash.
+    val toshTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/tosh.ttl")
+    shapesModel.read(toshTTL, SH.BASE_URI, FileUtils.langTurtle)
+    shapesModel.add(SHACLSystemModel.getSHACLModel)
+
+    // Load system ontology.
+    shapesModel.add(SystemTriples.getVocabularyModel())
+
+    val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
+
+    def checkDataFile(dataFile: File): Boolean = {
+      logger.info(s"Starting validation of $dataFile against $shapesFile.")
+
+      // Load the data model.
+      val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
+      val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
+      logger.debug(s"Resources to check: ${resourcesToCheck}")
+
+      // Create a validation engine.
+      val config: ValidationEngineConfiguration = new ValidationEngineConfiguration()
+        .setReportDetails(true)
+        .setValidateShapes(true)
+
+      val engine: ValidationEngine =
+        ValidationUtil.createValidationEngine(dataModel, shapesOntModel, config)
+
+      // Track progress.
+      // TODO: Implement a progress monitor so we can track long-running jobs.
+      // engine.setProgressMonitor(new SimpleProgressMonitor("Progress"))
+
+      // Count off validated nodes.
+      val resourcesCheckedSet: mutable.Set[RDFNode] = mutable.Set()
+      engine.setFocusNodeFilter(rdfNode => {
+        logger.debug(s"Checking focus node ${rdfNode}")
+        resourcesCheckedSet.add(rdfNode)
+        true
+      })
+
+      engine.validateAll()
+      val report = engine.getValidationReport
+
+      // Report on any nodes that were not checked.
+      val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
+      val resourcesNotChecked: Seq[Resource] =
+        resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
+
+      /** Summarize a set of URIs as a string. */
+      def getShortenedURIs(nodes: Seq[Resource]): String = {
+        if (nodes.isEmpty) return "none"
+        else
+          return nodes
+              .map(node => {
+                // Try to use either the data model or the shape model to shorten URLs.
+                val dataModelQName   = dataModel.qnameFor(node.getURI)
+                val shapesModelQName = shapesModel.qnameFor(node.getURI)
+
+                if (dataModelQName != null) dataModelQName
+                else if (shapesModelQName != null) shapesModelQName
+                else node.getURI
+              })
+              .mkString(", ")
+      }
+
+      if (!resourcesNotChecked.isEmpty) {
+        val filteredResourcesNotChecked = resourcesNotChecked
+          .filter(rdfNode => {
+            // Filter out any RDF Nodes that appear to be well-formed rdf:List.
+            // This means they should have *both* rdf:first and rdf:rest.
+            val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSet
+
+            if (
+              props.size == 2 &&
+              (props contains RDF.first) &&
+              (props contains RDF.rest)
+            ) false
+            else true
+          })
+
+        filteredResourcesNotChecked
+          .foreach(rdfNode => {
+            val types =
+              rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
+            val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
+            logger.warn(
+              s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked."
+            )
+          })
+        logger.warn(f"${filteredResourcesNotChecked.size}%,d resources NOT checked.")
+      }
+      logger.info(f"${resourcesChecked.size}%,d resources checked.")
+
+      if (report.conforms) {
+        println(dataFile + " OK")
+        return true;
+      } else {
+        val errors = ValidationErrorGenerator.generate(report, shapesOntModel, dataModel)
+
+        def stringEndsWithOneOf(str: String, oneOf: Seq[String]): Boolean =
+          oneOf.exists(str.endsWith(_))
+
+        val filteredErrors = errors
+          .filter(
+            err =>
+              onlyConstraints.isEmpty || stringEndsWithOneOf(
+                err.sourceConstraintComponent.toString,
+                onlyConstraints
+              )
+          )
+          .filter(
+            err =>
+              ignoreConstraints.isEmpty || !stringEndsWithOneOf(
+                err.sourceConstraintComponent.toString,
+                ignoreConstraints
+              )
+          )
+
+        filteredErrors
+          .groupBy(_.classNode)
+          .foreach({
+            case (classNode, classErrors) =>
+              // TODO: look up the classNode label
+              println(s"CLASS <${classNode}> (${classErrors.length} errors)")
+              classErrors
+                .groupBy(_.focusNode)
+                .foreach({
+                  case (focusNode, focusErrors) =>
+                    println(s"Node ${focusNode} (${focusErrors.length} errors)")
+                    focusErrors
+                      .groupBy(_.path)
+                      .foreach({
+                        case (path, pathErrors) =>
+                          println(s" - Path <${path}> (${pathErrors.length} errors)")
+                          pathErrors.foreach(error => {
+                            println(
+                              s"   - [${error.sourceConstraintComponent}] ${error.message} ${error.value
+                                .map(value => s"(value: $value)")
+                                .mkString(", ")}"
+                            )
+                          })
+                          println()
+                      })
+                    println()
+                    if (conf.validate.displayNodes()) {
+                      // Display focusNode as Turtle.
+                      val focusNodeModel =
+                        focusNode.inModel(dataModel).asResource.listProperties.toModel
+                      focusNodeModel
+                        .setNsPrefixes(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava)
+
+                      val stringWriter = new StringWriter
+                      focusNodeModel.write(stringWriter, "Turtle")
+                      println(s"Focus node model:\n${stringWriter.toString}")
+                    }
+                })
+          })
+
+        println()
+        println(s"${filteredErrors.length} errors displayed")
+
+        val ignoredErrors = errors diff filteredErrors
+        if (!ignoredErrors.isEmpty) {
+          println(s"${ignoredErrors.length} errors ignored because:")
+          onlyConstraints.foreach(
+            only => println(s" - Only displaying sourceConstraintComponents ending in '$only'")
+          )
+          ignoreConstraints.foreach(
+            ignored => println(s" - Ignoring sourceConstraintComponents ending in '$ignored'")
+          )
+        }
+
+        println(dataFile + " FAILED VALIDATION")
+        return false;
+      }
+    }
+
+    if (dataFiles.map(checkDataFile(_)).forall(identity))
+      return 0
+    else
+      return 1
+  }
+}
+
+/**
+ * Generate SHACL based on Turtle provided.
+ */
+object Generator {
+  def generate(logger: Logger, conf: Conf): Int = {
+    println("Generate with conf: " + conf)
+    return 0
+  }
+}
+
+/**
   * Command line configuration for Validate.
   */
 class Conf(arguments: Seq[String], logger: Logger) extends ScallopConf(arguments) {
@@ -118,18 +323,29 @@ class Conf(arguments: Seq[String], logger: Logger) extends ScallopConf(arguments
 
   val version = getClass.getPackage.getImplementationVersion
   version("SHACLI: A SHACLI CLI v" + version)
-  val shapes: ScallopOption[File] = trailArg[File](descr = "Shapes file to validate (in Turtle)")
-  val data: ScallopOption[List[File]]   = trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
-  val only: ScallopOption[List[String]] = opt[List[String]](
-    default = Some(List()),
-    descr = "Only display SourceConstraintComponent ending with these strings"
-  )
-  val ignore: ScallopOption[List[String]] = opt[List[String]](
-    default = Some(List()),
-    descr = "Don't display SourceConstraintComponent ending with these strings"
-  )
-  val displayNodes: ScallopOption[Boolean] =
-    opt[Boolean](default = Some(false), descr = "Display all failing nodes as Turtle")
+  val validate = new Subcommand("validate") {
+    val shapes: ScallopOption[File] = trailArg[File](descr = "Shapes file to validate (in Turtle)")
+    val data: ScallopOption[List[File]]   = trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
+    val only: ScallopOption[List[String]] = opt[List[String]](
+      default = Some(List()),
+      descr = "Only display SourceConstraintComponent ending with these strings"
+    )
+    val ignore: ScallopOption[List[String]] = opt[List[String]](
+      default = Some(List()),
+      descr = "Don't display SourceConstraintComponent ending with these strings"
+    )
+    val displayNodes: ScallopOption[Boolean] =
+      opt[Boolean](default = Some(false), descr = "Display all failing nodes as Turtle")
+  }
+  addSubcommand(validate)
+
+  // If you run `[shacli] generate [data files]`, we will attempt to generate SHACL
+  // that represents the presented content.
+  val generate = new Subcommand("generate") {
+    val data: ScallopOption[List[File]] = trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
+  }
+  addSubcommand(generate)
+
   verify()
 }
 
@@ -142,191 +358,9 @@ object ShacliApp extends App with LazyLogging {
   // Parse command line arguments.
   val conf = new Conf(args, logger)
 
-  val shapesFile: File                = conf.shapes()
-  val dataFiles: List[File]           = conf.data()
-  val onlyConstraints: List[String]   = conf.only()
-  val ignoreConstraints: List[String] = conf.ignore()
-
-  // Load the shapes.
-  val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
-
-  // Load SHACL and Dash.
-  val toshTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/tosh.ttl")
-  shapesModel.read(toshTTL, SH.BASE_URI, FileUtils.langTurtle)
-  shapesModel.add(SHACLSystemModel.getSHACLModel)
-
-  // Load system ontology.
-  shapesModel.add(SystemTriples.getVocabularyModel())
-
-  val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
-
-  def checkDataFile(dataFile: File): Boolean = {
-    logger.info(s"Starting validation of $dataFile against $shapesFile.")
-
-    // Load the data model.
-    val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
-    val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
-    logger.debug(s"Resources to check: ${resourcesToCheck}")
-
-    // Create a validation engine.
-    val config: ValidationEngineConfiguration = new ValidationEngineConfiguration()
-      .setReportDetails(true)
-      .setValidateShapes(true)
-
-    val engine: ValidationEngine =
-      ValidationUtil.createValidationEngine(dataModel, shapesOntModel, config)
-
-    // Track progress.
-    // TODO: Implement a progress monitor so we can track long-running jobs.
-    // engine.setProgressMonitor(new SimpleProgressMonitor("Progress"))
-
-    // Count off validated nodes.
-    val resourcesCheckedSet: mutable.Set[RDFNode] = mutable.Set()
-    engine.setFocusNodeFilter(rdfNode => {
-      logger.debug(s"Checking focus node ${rdfNode}")
-      resourcesCheckedSet.add(rdfNode)
-      true
-    })
-
-    engine.validateAll()
-    val report = engine.getValidationReport
-
-    // Report on any nodes that were not checked.
-    val resourcesChecked: Set[RDFNode] = resourcesCheckedSet.toSet
-    val resourcesNotChecked: Seq[Resource] =
-      resourcesToCheck.filter(rdfNode => !resourcesChecked.contains(rdfNode))
-
-    /** Summarize a set of URIs as a string. */
-    def getShortenedURIs(nodes: Seq[Resource]): String = {
-      if (nodes.isEmpty) return "none"
-      else
-        return nodes
-            .map(node => {
-              // Try to use either the data model or the shape model to shorten URLs.
-              val dataModelQName   = dataModel.qnameFor(node.getURI)
-              val shapesModelQName = shapesModel.qnameFor(node.getURI)
-
-              if (dataModelQName != null) dataModelQName
-              else if (shapesModelQName != null) shapesModelQName
-              else node.getURI
-            })
-            .mkString(", ")
-    }
-
-    if (!resourcesNotChecked.isEmpty) {
-      val filteredResourcesNotChecked = resourcesNotChecked
-        .filter(rdfNode => {
-          // Filter out any RDF Nodes that appear to be well-formed rdf:List.
-          // This means they should have *both* rdf:first and rdf:rest.
-          val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSet
-
-          if (
-            props.size == 2 &&
-            (props contains RDF.first) &&
-            (props contains RDF.rest)
-          ) false
-          else true
-        })
-
-      filteredResourcesNotChecked
-        .foreach(rdfNode => {
-          val types =
-            rdfNode.asResource.listProperties(RDF.`type`).toList.asScala.map(_.getResource).toSeq
-          val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSeq
-          logger.warn(
-            s"Resource ${rdfNode} (types: ${getShortenedURIs(types)}; props: ${getShortenedURIs(props)}) was not checked."
-          )
-        })
-      logger.warn(f"${filteredResourcesNotChecked.size}%,d resources NOT checked.")
-    }
-    logger.info(f"${resourcesChecked.size}%,d resources checked.")
-
-    if (report.conforms) {
-      println(dataFile + " OK")
-      return true;
-    } else {
-      val errors = ValidationErrorGenerator.generate(report, shapesOntModel, dataModel)
-
-      def stringEndsWithOneOf(str: String, oneOf: Seq[String]): Boolean =
-        oneOf.exists(str.endsWith(_))
-
-      val filteredErrors = errors
-        .filter(
-          err =>
-            onlyConstraints.isEmpty || stringEndsWithOneOf(
-              err.sourceConstraintComponent.toString,
-              onlyConstraints
-            )
-        )
-        .filter(
-          err =>
-            ignoreConstraints.isEmpty || !stringEndsWithOneOf(
-              err.sourceConstraintComponent.toString,
-              ignoreConstraints
-            )
-        )
-
-      filteredErrors
-        .groupBy(_.classNode)
-        .foreach({
-          case (classNode, classErrors) =>
-            // TODO: look up the classNode label
-            println(s"CLASS <${classNode}> (${classErrors.length} errors)")
-            classErrors
-              .groupBy(_.focusNode)
-              .foreach({
-                case (focusNode, focusErrors) =>
-                  println(s"Node ${focusNode} (${focusErrors.length} errors)")
-                  focusErrors
-                    .groupBy(_.path)
-                    .foreach({
-                      case (path, pathErrors) =>
-                        println(s" - Path <${path}> (${pathErrors.length} errors)")
-                        pathErrors.foreach(error => {
-                          println(
-                            s"   - [${error.sourceConstraintComponent}] ${error.message} ${error.value
-                              .map(value => s"(value: $value)")
-                              .mkString(", ")}"
-                          )
-                        })
-                        println()
-                    })
-                  println()
-                  if (conf.displayNodes()) {
-                    // Display focusNode as Turtle.
-                    val focusNodeModel =
-                      focusNode.inModel(dataModel).asResource.listProperties.toModel
-                    focusNodeModel
-                      .setNsPrefixes(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava)
-
-                    val stringWriter = new StringWriter
-                    focusNodeModel.write(stringWriter, "Turtle")
-                    println(s"Focus node model:\n${stringWriter.toString}")
-                  }
-              })
-        })
-
-      println()
-      println(s"${filteredErrors.length} errors displayed")
-
-      val ignoredErrors = errors diff filteredErrors
-      if (!ignoredErrors.isEmpty) {
-        println(s"${ignoredErrors.length} errors ignored because:")
-        onlyConstraints.foreach(
-          only => println(s" - Only displaying sourceConstraintComponents ending in '$only'")
-        )
-        ignoreConstraints.foreach(
-          ignored => println(s" - Ignoring sourceConstraintComponents ending in '$ignored'")
-        )
-      }
-
-      println(dataFile + " FAILED VALIDATION")
-      return false;
-    }
+  conf.subcommand match {
+    case Some(conf.validate) => System.exit(Validator.validate(logger, conf))
+    case Some(conf.generate) => System.exit(Generator.generate(logger, conf))
+    case _ => throw new RuntimeException("Unknown subcommand: " + conf.subcommand)
   }
-
-  if (dataFiles.map(checkDataFile(_)).forall(identity))
-    System.exit(0);
-  else
-    System.exit(1);
 }
