@@ -72,5 +72,22 @@ object ShacliAppTest extends TestSuite {
       assert(res.stdout contains "[info] 1 errors displayed")
       assert(res.stdout contains "Nonzero exit code returned from runner: 1")
     }
+
+    test("Whether Shacli validates two files as expected") {
+      val test1shapes      = new File(getClass.getResource("/test1_shapes.ttl").toURI)
+      val test1data_ttl    = new File(getClass.getResource("/test1_data.ttl").toURI)
+      val test1data_jsonld = new File(getClass.getResource("/test1_data.jsonld").toURI)
+
+      val res = exec(Seq("sbt", s"run $test1shapes $test1data_ttl $test1data_jsonld"))
+      assert(res.exitCode == 1)
+      assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
+      assert(
+        res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2"
+      )
+      assert(res.stdout contains "[info] 1 errors displayed")
+      assert(res.stdout contains "Nonzero exit code returned from runner: 1")
+      assert(res.stdout contains "test1_data.ttl FAILED VALIDATION")
+      assert(res.stdout contains "test1_data.jsonld FAILED VALIDATION")
+    }
   }
 }
