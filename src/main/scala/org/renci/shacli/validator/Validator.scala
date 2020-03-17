@@ -14,10 +14,8 @@ import org.topbraid.shacl.util.SHACLSystemModel
 import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
-import org.rogach.scallop._
-import org.rogach.scallop.exceptions._
 
-import com.typesafe.scalalogging.{LazyLogging, Logger}
+import com.typesafe.scalalogging.Logger
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
