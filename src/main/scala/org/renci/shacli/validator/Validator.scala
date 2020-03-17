@@ -105,8 +105,8 @@ object ValidationErrorGenerator {
 }
 
 /**
- * Validator
- */
+  * Validator
+  */
 object Validator {
   def validate(logger: Logger, conf: ShacliApp.Conf): Int = {
     val shapesFile: File                = conf.validate.shapes()
@@ -125,7 +125,8 @@ object Validator {
     // Load system ontology.
     shapesModel.add(SystemTriples.getVocabularyModel())
 
-    val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
+    val shapesOntModel: OntModel =
+      ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
 
     def checkDataFile(dataFile: File): Boolean = {
       logger.info(s"Starting validation of $dataFile against $shapesFile.")
@@ -168,16 +169,16 @@ object Validator {
         if (nodes.isEmpty) return "none"
         else
           return nodes
-              .map(node => {
-                // Try to use either the data model or the shape model to shorten URLs.
-                val dataModelQName   = dataModel.qnameFor(node.getURI)
-                val shapesModelQName = shapesModel.qnameFor(node.getURI)
+            .map(node => {
+              // Try to use either the data model or the shape model to shorten URLs.
+              val dataModelQName   = dataModel.qnameFor(node.getURI)
+              val shapesModelQName = shapesModel.qnameFor(node.getURI)
 
-                if (dataModelQName != null) dataModelQName
-                else if (shapesModelQName != null) shapesModelQName
-                else node.getURI
-              })
-              .mkString(", ")
+              if (dataModelQName != null) dataModelQName
+              else if (shapesModelQName != null) shapesModelQName
+              else node.getURI
+            })
+            .mkString(", ")
       }
 
       if (!resourcesNotChecked.isEmpty) {
@@ -187,11 +188,9 @@ object Validator {
             // This means they should have *both* rdf:first and rdf:rest.
             val props = rdfNode.asResource.listProperties.toList.asScala.map(_.getPredicate).toSet
 
-            if (
-              props.size == 2 &&
-              (props contains RDF.first) &&
-              (props contains RDF.rest)
-            ) false
+            if (props.size == 2 &&
+                (props contains RDF.first) &&
+                (props contains RDF.rest)) false
             else true
           })
 
@@ -264,7 +263,9 @@ object Validator {
                       val focusNodeModel =
                         focusNode.inModel(dataModel).asResource.listProperties.toModel
                       focusNodeModel
-                        .setNsPrefixes(Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava)
+                        .setNsPrefixes(
+                          Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava
+                        )
 
                       val stringWriter = new StringWriter
                       focusNodeModel.write(stringWriter, "Turtle")

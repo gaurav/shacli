@@ -9,7 +9,6 @@ import org.rogach.scallop.exceptions._
 
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 
-
 import org.renci.shacli.validator.Validator
 import org.renci.shacli.generator.Generator
 
@@ -19,7 +18,6 @@ import org.renci.shacli.generator.Generator
   * TopBraid's SHACL engine.
   */
 object ShacliApp extends App with LazyLogging {
-
   /**
     * Command line configuration for Validate.
     */
@@ -36,8 +34,10 @@ object ShacliApp extends App with LazyLogging {
     version("SHACLI: A SHACLI CLI v" + version)
     val validate: validate = new validate
     class validate extends Subcommand("validate") {
-      val shapes: ScallopOption[File] = trailArg[File](descr = "Shapes file to validate (in Turtle)")
-      val data: ScallopOption[List[File]]   = trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
+      val shapes: ScallopOption[File] =
+        trailArg[File](descr = "Shapes file to validate (in Turtle)")
+      val data: ScallopOption[List[File]] =
+        trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
       val only: ScallopOption[List[String]] = opt[List[String]](
         default = Some(List()),
         descr = "Only display SourceConstraintComponent ending with these strings"
@@ -55,7 +55,8 @@ object ShacliApp extends App with LazyLogging {
     // that represents the presented content.
     val generate: generate = new generate
     class generate extends Subcommand("generate") {
-      val data: ScallopOption[List[File]] = trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
+      val data: ScallopOption[List[File]] =
+        trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
     }
     addSubcommand(generate)
 
@@ -68,6 +69,6 @@ object ShacliApp extends App with LazyLogging {
   conf.subcommand match {
     case Some(conf.validate) => System.exit(Validator.validate(logger, conf))
     case Some(conf.generate) => System.exit(Generator.generate(logger, conf))
-    case _ => throw new RuntimeException("Unknown subcommand: " + conf.subcommand)
+    case _                   => throw new RuntimeException("Unknown subcommand: " + conf.subcommand)
   }
 }
