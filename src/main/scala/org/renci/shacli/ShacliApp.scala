@@ -151,8 +151,8 @@ object ShacliApp extends App with LazyLogging {
   val shapesModel: Model = RDFDataMgr.loadModel(shapesFile.toString)
 
   // Load SHACL and Dash.
-  val dashTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/dash.ttl")
-  shapesModel.read(dashTTL, SH.BASE_URI, FileUtils.langTurtle)
+  val toshTTL: InputStream = classOf[SHACLSystemModel].getResourceAsStream("/rdf/tosh.ttl")
+  shapesModel.read(toshTTL, SH.BASE_URI, FileUtils.langTurtle)
   shapesModel.add(SHACLSystemModel.getSHACLModel)
 
   // Load system ontology.
