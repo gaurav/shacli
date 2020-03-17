@@ -164,6 +164,8 @@ object ShacliApp extends App with LazyLogging {
   val shapesOntModel: OntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, shapesModel)
 
   def checkDataFile(dataFile: File): Boolean = {
+    logger.info(s"Starting validation of $dataFile against $shapesFile.")
+
     // Load the data model.
     val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
     val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala

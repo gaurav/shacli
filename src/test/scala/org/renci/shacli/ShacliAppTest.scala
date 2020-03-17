@@ -43,6 +43,7 @@ object ShacliAppTest extends TestSuite {
 
       val res = exec(Seq("sbt", s"run $test1shapes $test1data"))
       assert(res.exitCode == 1)
+      assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
       assert(
         res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2"
@@ -65,6 +66,7 @@ object ShacliAppTest extends TestSuite {
 
       val res = exec(Seq("sbt", s"run $test1shapes $test1data"))
       assert(res.exitCode == 1)
+      assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
       assert(
         res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2"
@@ -80,6 +82,7 @@ object ShacliAppTest extends TestSuite {
 
       val res = exec(Seq("sbt", s"run $test1shapes $test1data_ttl $test1data_jsonld"))
       assert(res.exitCode == 1)
+      assert(res.stdout contains "Starting validation of")
       assert(res.stdout contains "Node http://example.org/Shadow (1 errors)")
       assert(
         res.stdout contains "- [http://www.w3.org/ns/shacl#MaxCountConstraintComponent] Property may only have 1 value, but found 2"
