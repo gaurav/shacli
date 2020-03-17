@@ -9,7 +9,11 @@
 example:Shadow a example:Dog ;
   foaf:name "Shadow" ;
   foaf:name "Shadow The Sheepdog" ;
-  foaf:age 1
+  foaf:age 1 ;
+  foaf:depiction (
+    "https://4.bp.blogspot.com/-1hz9RrOt68Q/URm9CoOovtI/AAAAAAAADDE/6oV4bmfuhOY/s1600/IMG_1236.JPG"
+    "https://www.enidblytonsociety.co.uk/author/illustrations/620wide+2863699.jpg"
+  )
 .
 
 example:Buck a example:Dog ;
@@ -20,5 +24,12 @@ example:Buck a example:Dog ;
 # A non-dog so we know it was not tested.
 example:CheshireCat foaf:name "Cheshire Cat" ;
   foaf:name "Unitary Authority of Warrington Cat" ;
-  foaf:age 232
+  foaf:age 232 ;
+  foaf:depiction [
+    rdf:first "https://upload.wikimedia.org/wikipedia/commons/a/ab/Tennel_Cheshire_proof.png" ;
+    rdf:next [
+      rdf:first "https://upload.wikimedia.org/wikipedia/en/4/4b/Cheshire_Cat_McGee.jpg" ;
+      rdf:next rdf:nil
+    ]
+  ]
 .

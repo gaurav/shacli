@@ -2,6 +2,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dash: <http://datashapes.org/dash#> .
 
 @prefix example: <http://example.org/> .
 
@@ -17,5 +18,10 @@ example:DogShape a sh:NodeShape ;
     sh:path foaf:name ;
     sh:minCount 1 ;
     sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:path foaf:depiction ;
+    sh:node dash:ListShape ;
+    sh:minCount 0
   ]
 .
