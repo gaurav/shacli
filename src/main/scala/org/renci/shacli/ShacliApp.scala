@@ -183,7 +183,7 @@ object ShacliApp extends App with LazyLogging {
     // Count off validated nodes.
     val resourcesCheckedSet: mutable.Set[RDFNode] = mutable.Set()
     engine.setFocusNodeFilter(rdfNode => {
-      logger.info(s"Checking focus node ${rdfNode}")
+      logger.debug(s"Checking focus node ${rdfNode}")
       resourcesCheckedSet.add(rdfNode)
       true
     })
