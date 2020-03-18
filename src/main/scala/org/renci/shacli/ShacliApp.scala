@@ -57,6 +57,12 @@ object ShacliApp extends App with LazyLogging {
     class generate extends Subcommand("generate") {
       val data: ScallopOption[List[File]] =
         trailArg[List[File]](descr = "Data file(s) or directories to validate (in Turtle)")
+      val output: ScallopOption[String] =
+        opt[String](descr = "Output file where SHACL should be written", default = Some("-"))
+      val baseURI: ScallopOption[String] = opt[String](
+        descr = "Base URI of the shapes to generate",
+        default = Some("http://example.org/")
+      )
     }
     addSubcommand(generate)
 
