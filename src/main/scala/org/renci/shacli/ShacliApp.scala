@@ -56,7 +56,7 @@ object ShacliApp extends App with LazyLogging {
     val generate: generate = new generate
     class generate extends Subcommand("generate") {
       val data: ScallopOption[List[File]] =
-        trailArg[List[File]](descr = "Data file(s) to validate (in Turtle)")
+        trailArg[List[File]](descr = "Data file(s) or directories to validate (in Turtle)")
     }
     addSubcommand(generate)
 
