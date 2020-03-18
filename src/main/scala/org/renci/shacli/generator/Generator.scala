@@ -3,7 +3,8 @@ package org.renci.shacli.generator
 import java.io.{BufferedOutputStream, File, FileOutputStream}
 
 import com.typesafe.scalalogging.Logger
-import org.apache.jena.rdf.model.{InfModel, Model, ModelFactory, RDFNode, Resource}
+import org.apache.jena.ontology.OntModelSpec
+import org.apache.jena.rdf.model.{Model, ModelFactory, RDFNode, Resource}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat}
 import org.apache.jena.vocabulary.{RDF, RDFS}
 import org.renci.shacli.ShacliApp
@@ -20,6 +21,7 @@ object Generator {
     val dataFiles: List[File] = conf.generate.data()
     val baseURI: String = conf.generate.baseURI()
     val outputFilename: String = conf.generate.output()
+    val reasoningOption: String = conf.generate.reasoning()
 
     // Start by loading all data into a single data model.
     val dataModel: Model = ModelFactory.createDefaultModel
@@ -32,7 +34,12 @@ object Generator {
         logger.info("Reading " + dataFile)
         dataModel.add(RDFDataMgr.loadModel(dataFile.toString))
       })
-    val infModel: InfModel = ModelFactory.createRDFSModel(dataModel)
+
+    val infModel: Model = reasoningOption match {
+      case "none" => dataModel
+      case "rdfs" => ModelFactory.createRDFSModel(dataModel)
+      case "owl" => ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, dataModel)
+    }
 
     // Identify every rdf:type in this data model.
     val typedResources = infModel.listResourcesWithProperty(RDF.`type`).toList.asScala

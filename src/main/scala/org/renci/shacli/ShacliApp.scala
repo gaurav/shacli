@@ -2,15 +2,11 @@ package org.renci.shacli
 
 import java.io.File
 
-import java.io.File
-
+import com.typesafe.scalalogging.{LazyLogging, Logger}
+import org.renci.shacli.generator.Generator
+import org.renci.shacli.validator.Validator
 import org.rogach.scallop._
 import org.rogach.scallop.exceptions._
-
-import com.typesafe.scalalogging.{LazyLogging, Logger}
-
-import org.renci.shacli.validator.Validator
-import org.renci.shacli.generator.Generator
 
 /**
   * Use the given shapes file to validate the given data file.
@@ -18,6 +14,7 @@ import org.renci.shacli.generator.Generator
   * TopBraid's SHACL engine.
   */
 object ShacliApp extends App with LazyLogging {
+
   /**
     * Command line configuration for Validate.
     */
@@ -30,7 +27,7 @@ object ShacliApp extends App with LazyLogging {
       case ex => super.onError(ex)
     }
 
-    val version = getClass.getPackage.getImplementationVersion
+    val version: String = getClass.getPackage.getImplementationVersion
     version("SHACLI: A SHACLI CLI v" + version)
     val validate: validate = new validate
     class validate extends Subcommand("validate") {
@@ -62,6 +59,11 @@ object ShacliApp extends App with LazyLogging {
       val baseURI: ScallopOption[String] = opt[String](
         descr = "Base URI of the shapes to generate",
         default = Some("http://example.org/")
+      )
+      val reasoning: ScallopOption[String] = opt[String](
+        descr = "Choose reasoning: none (default), rdfs or owl",
+        default = Some("none")
+        // TODO: add validation to ensure that its one of the three kinds.
       )
     }
     addSubcommand(generate)
