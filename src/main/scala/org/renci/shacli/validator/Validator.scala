@@ -1,7 +1,10 @@
 package org.renci.shacli.validator
 
-import java.io.File
+import scala.language.reflectiveCalls
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
+import java.io.File
 import java.io.{InputStream, File, ByteArrayOutputStream, StringWriter}
 
 import org.topbraid.shacl.validation._
@@ -14,11 +17,7 @@ import org.topbraid.shacl.util.SHACLSystemModel
 import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
-
 import com.typesafe.scalalogging.Logger
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 import org.renci.shacli.ShacliApp
 
