@@ -47,9 +47,10 @@ object Generator {
     shapesModel.setNsPrefixes(dataModel)
     shapesModel.setNsPrefix("", baseURI)
     shapesModel.setNsPrefix("shacl", SH.getURI)
+    shapesModel.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#")
 
     resProps.keys.foreach(rdfClass => {
-      println("Class " + dataModel.shortForm(rdfClass.asResource.getURI))
+      logger.info("Class " + dataModel.shortForm(rdfClass.asResource.getURI))
 
       val shapeRes =
         shapesModel.createResource(baseURI + rdfClass.asResource.getLocalName + "Shape")
@@ -100,10 +101,79 @@ object Generator {
           maxCount
         )
 
+        // What types do we see in this property?
+        val objectsPerResource = resourcesInType.flatMap(_.listProperties(prop).toList.asScala.map(_.getObject))
+        val valueType = if (objectsPerResource.isEmpty) {
+          propRes.addProperty(
+            SH.nodeKind,
+            RDF.nil
+          )
+          "empty"
+        } else {
+          val resources = objectsPerResource.filter(_.isResource).map(_.asResource)
+          val literals = objectsPerResource.filter(_.isLiteral).map(_.asLiteral)
+
+          if (literals.isEmpty && resources.nonEmpty) {
+            propRes.addProperty(
+              SH.nodeKind,
+              SH.BlankNodeOrIRI,
+            )
+            "blank node or IRI"
+          } else if (literals.nonEmpty && resources.isEmpty) {
+            val literalTypes = literals.map(_.getDatatypeURI).groupBy(identity)
+            val size = literalTypes.keySet.size
+
+            if (size == 0) {
+              // No known literal types?
+              propRes.addProperty(
+                SH.nodeKind,
+                SH.Literal,
+              )
+              propRes.addProperty(
+                SH.datatype,
+                RDF.nil
+              )
+
+              "literals of unknown type"
+            } else if (size == 1) {
+              // All literals are of the same type!
+              propRes.addProperty(
+                SH.nodeKind,
+                SH.Literal,
+              )
+              propRes.addProperty(
+                SH.datatype,
+                shapesModel.createResource(literalTypes.keySet.seq.head)
+              )
+
+              "literals of type " + shapesModel.shortForm(literalTypes.keySet.seq.head)
+            } else {
+              // More than one literal type.
+              propRes.addProperty(
+                SH.nodeKind,
+                SH.Literal,
+              )
+              literalTypes.keySet.foreach(typ => propRes.addProperty(
+                SH.datatype,
+                shapesModel.createResource(typ)
+              ))
+
+              "literals of types " + literalTypes.keySet.seq.map(shapesModel.shortForm).mkString(" or ")
+            }
+          } else {
+            propRes.addProperty(
+              SH.nodeKind,
+              RDF.nil
+            )
+            "unknown"
+          }
+        }
+
+        // Add it to the shapeRes.
         shapeRes.addProperty(SH.property, propRes)
 
-        // Report
-        println(s" - Property: ${dataModel.shortForm(prop.getURI)} (min: $minCount, max: $maxCount)")
+        // Report to STDOUT.
+        logger.info(s" - Property: ${dataModel.shortForm(prop.getURI)} (min: $minCount, max: $maxCount, type: $valueType)")
       })
     })
 
