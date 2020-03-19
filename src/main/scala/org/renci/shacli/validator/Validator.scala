@@ -261,14 +261,13 @@ object Validator {
                       // Display focusNode as Turtle.
                       val focusNodeModel =
                         focusNode.inModel(dataModel).asResource.listProperties.toModel
-                      focusNodeModel
-                        .setNsPrefixes(
-                          Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava
-                        )
+                      focusNodeModel.setNsPrefixes(shapesModel)
+                      focusNodeModel.setNsPrefixes(dataModel)
 
                       val stringWriter = new StringWriter
                       focusNodeModel.write(stringWriter, "Turtle")
-                      println(s"Focus node model:\n${stringWriter.toString}")
+
+                      println(s"Focus node model:\n${stringWriter.toString}\n")
                     }
                 })
           })
