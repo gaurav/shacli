@@ -231,22 +231,30 @@ object Validator {
               )
           )
 
+        def getLabelWithLeadingSpace(rdfNode: RDFNode): String = {
+          if (rdfNode == null) return  " (empty)"
+          if (!rdfNode.isResource) return " (not a resource)"
+          val res = rdfNode.asResource
+          val statement = res.getModel.getProperty(res, RDFS.label)
+          if (statement != null) s" (${statement.getString})" else ""
+        }
+
         filteredErrors
           .groupBy(_.classNode)
           .foreach({
             case (classNode, classErrors) =>
               // TODO: look up the classNode label
-              println(s"CLASS <${classNode}> (${classErrors.length} errors)")
+              println(s"CLASS <${classNode}>${getLabelWithLeadingSpace(classNode)} (${classErrors.length} errors)")
               classErrors
                 .groupBy(_.focusNode)
                 .foreach({
                   case (focusNode, focusErrors) =>
-                    println(s"Node ${focusNode} (${focusErrors.length} errors)")
+                    println(s"Node ${focusNode}${getLabelWithLeadingSpace(focusNode)} (${focusErrors.length} errors)")
                     focusErrors
                       .groupBy(_.path)
                       .foreach({
                         case (path, pathErrors) =>
-                          println(s" - Path <${path}> (${pathErrors.length} errors)")
+                          println(s" - Path <${path}>${getLabelWithLeadingSpace(dataModel.getResource(path))} (${pathErrors.length} errors)")
                           pathErrors.foreach(error => {
                             println(
                               s"   - [${error.sourceConstraintComponent}] ${error.message} ${error.value
@@ -267,13 +275,14 @@ object Validator {
                       val stringWriter = new StringWriter
                       focusNodeModel.write(stringWriter, "Turtle")
 
-                      println(s"Focus node model:\n${stringWriter.toString}\n")
+                      println(s"Focus node model:${stringWriter.toString.replaceAll("(?m)^@prefix.*?$", "").replaceAll("\n+", "\n")}===\n")
                     }
                 })
           })
 
         println()
-        println(s"${filteredErrors.length} errors displayed")
+        println(s"${filteredErrors.length} errors displayed.")
+        println()
 
         val ignoredErrors = errors diff filteredErrors
         if (!ignoredErrors.isEmpty) {
