@@ -239,27 +239,29 @@ object Validator {
           if (statement != null) s" (${statement.getString})" else ""
         }
 
+        def errorCountWithLeadingSpace(errorCount: Int): String = if (errorCount == 1) "" else s" ($errorCount errors)"
+
         filteredErrors
           .groupBy(_.classNode)
           .foreach({
             case (classNode, classErrors) =>
               // TODO: look up the classNode label
-              println(s"CLASS <${classNode}>${getLabelWithLeadingSpace(classNode)} (${classErrors.length} errors)")
+              println(s"CLASS <${classNode}>${getLabelWithLeadingSpace(classNode)}${errorCountWithLeadingSpace(classErrors.length)}")
               classErrors
                 .groupBy(_.focusNode)
                 .foreach({
                   case (focusNode, focusErrors) =>
-                    println(s"Node ${focusNode}${getLabelWithLeadingSpace(focusNode)} (${focusErrors.length} errors)")
+                    println(s"Node ${focusNode}${getLabelWithLeadingSpace(focusNode)}${errorCountWithLeadingSpace(focusErrors.length)}")
                     focusErrors
                       .groupBy(_.path)
                       .foreach({
                         case (path, pathErrors) =>
-                          println(s" - Path <${path}>${getLabelWithLeadingSpace(dataModel.getResource(path))} (${pathErrors.length} errors)")
+                          println(s" - Path <${path}>${getLabelWithLeadingSpace(dataModel.getResource(path))}${errorCountWithLeadingSpace(pathErrors.length)}")
                           pathErrors.foreach(error => {
                             println(
-                              s"   - [${error.sourceConstraintComponent}] ${error.message} ${error.value
-                                .map(value => s"(value: $value)")
-                                .mkString(", ")}"
+                              s"   - [${error.sourceConstraintComponent}] ${error.message}.${error.value
+                                .map(value => s"\n     - Value: $value${getLabelWithLeadingSpace(value)}")
+                                .mkString("")}"
                             )
                           })
                           println()
