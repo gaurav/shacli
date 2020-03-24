@@ -3,13 +3,12 @@ package org.renci.shacli.validator
 import scala.language.reflectiveCalls
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-
-import java.io.File
-import java.io.{InputStream, File, ByteArrayOutputStream, StringWriter}
+import java.net.URI
+import java.io.{ByteArrayOutputStream, File, InputStream, StringWriter}
 
 import org.topbraid.shacl.validation._
 import org.apache.jena.ontology.{OntModel, OntModelSpec}
-import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
+import org.apache.jena.rdf.model.{Model, ModelFactory, RDFList, RDFNode, Resource}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
 import org.topbraid.jenax.util.SystemTriples
@@ -18,7 +17,6 @@ import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
 import com.typesafe.scalalogging.Logger
-
 import org.renci.shacli.ShacliApp
 
 /*
@@ -133,6 +131,13 @@ object Validator {
       // Load the data model.
       val loadedModel: Model = RDFDataMgr.loadModel(dataFile.toString);
 
+      conf.validate.`import`().foreach(toImport => {
+        try {
+          RDFDataMgr.read(loadedModel, toImport)
+        } catch {
+          case exception: Exception => logger.error(s"Could not load $toImport: $exception")
+        }
+      })
 
       // Turn on reasoning.
       val dataModel: Model = conf.validate.reasoning() match {
