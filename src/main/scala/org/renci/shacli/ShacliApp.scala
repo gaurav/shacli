@@ -49,6 +49,11 @@ object ShacliApp extends App with LazyLogging {
         default = Some(true),
         descr = "Summarize the validation errors seen"
       )
+      val reasoning: ScallopOption[String] = opt[String](
+        descr = "Choose reasoning: none (default), rdfs or owl",
+        default = Some("none"),
+        validate = Set("none", "rdfs", "owl").contains(_)
+      )
     }
     addSubcommand(validate)
 
@@ -66,8 +71,8 @@ object ShacliApp extends App with LazyLogging {
       )
       val reasoning: ScallopOption[String] = opt[String](
         descr = "Choose reasoning: none (default), rdfs or owl",
-        default = Some("none")
-        // TODO: add validation to ensure that its one of the three kinds.
+        default = Some("none"),
+        validate = Set("none", "rdfs", "owl").contains(_)
       )
     }
     addSubcommand(generate)

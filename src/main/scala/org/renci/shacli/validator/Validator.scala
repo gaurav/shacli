@@ -131,7 +131,15 @@ object Validator {
       logger.info(s"Starting validation of $dataFile against $shapesFile.")
 
       // Load the data model.
-      val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
+      val loadedModel: Model = RDFDataMgr.loadModel(dataFile.toString);
+
+
+      // Turn on reasoning.
+      val dataModel: Model = conf.validate.reasoning() match {
+        case "none" => loadedModel
+        case "rdfs" => ModelFactory.createRDFSModel(loadedModel)
+        case "owl" => ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, loadedModel)
+      }
       val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
       logger.debug(s"Resources to check: ${resourcesToCheck}")
 
