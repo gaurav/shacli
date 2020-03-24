@@ -266,16 +266,33 @@ object Validator {
                       })
                     println()
                     if (conf.validate.displayNodes()) {
+                      def modelToString(model: Model): String = {
+                        val stringWriter = new StringWriter
+                        model.write(stringWriter, "Turtle")
+                        stringWriter.toString
+                          .replaceAll("(?m)^@prefix.*?$", "")
+                          .replaceAll("\n+", "\n")
+                          .trim
+                          .replaceAll("(?m)^", "  ")
+                      }
+
                       // Display focusNode as Turtle.
-                      val focusNodeModel =
-                        focusNode.inModel(dataModel).asResource.listProperties.toModel
+                      val focusNodeModel = focusNode.inModel(dataModel).asResource.listProperties.toModel
                       focusNodeModel.setNsPrefixes(shapesModel)
                       focusNodeModel.setNsPrefixes(dataModel)
+                      println(s"Focus node model:\n${modelToString(focusNodeModel)}\n")
 
-                      val stringWriter = new StringWriter
-                      focusNodeModel.write(stringWriter, "Turtle")
+                      // Display value nodes as Turtle.
+                      focusErrors.map(_.value).flatten.toSet.flatMap((rdfNode: RDFNode) => {
+                        if (!rdfNode.isResource) None
+                        else {
+                          val valueNodeModel = rdfNode.inModel(dataModel).asResource.listProperties.toModel
+                          valueNodeModel.setNsPrefixes(shapesModel)
+                          valueNodeModel.setNsPrefixes(dataModel)
 
-                      println(s"Focus node model:${stringWriter.toString.replaceAll("(?m)^@prefix.*?$", "").replaceAll("\n+", "\n")}===\n")
+                          Some(s"Value node model for $rdfNode:\n${modelToString(valueNodeModel)}\n")
+                        }
+                      }).foreach(println(_))
                     }
                 })
           })
