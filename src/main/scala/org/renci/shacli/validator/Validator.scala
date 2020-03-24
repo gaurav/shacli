@@ -314,6 +314,18 @@ object Validator {
           )
         }
 
+        if(conf.validate.summarizeErrors()) {
+          println("Validation errors discovered:")
+          val errorsByConstraint = filteredErrors.groupBy(_.sourceConstraintComponent)
+          errorsByConstraint.keySet.toSeq.sorted(new Ordering[Resource]() {
+            override def compare(x: Resource, y: Resource): Int = x.getLocalName.compareTo(y.getLocalName)
+          }).map(constraint => {
+            val errors = errorsByConstraint.getOrElse(constraint, Seq())
+            println(s" - ${getShortenedURIs(Seq(constraint))}: ${errors.size} errors")
+          })
+          println()
+        }
+
         println(dataFile + " FAILED VALIDATION")
         return false;
       }

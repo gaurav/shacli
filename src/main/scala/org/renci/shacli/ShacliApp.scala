@@ -45,6 +45,10 @@ object ShacliApp extends App with LazyLogging {
       )
       val displayNodes: ScallopOption[Boolean] =
         opt[Boolean](default = Some(false), descr = "Display all failing nodes as Turtle")
+      val summarizeErrors: ScallopOption[Boolean] = opt[Boolean](
+        default = Some(true),
+        descr = "Summarize the validation errors seen"
+      )
     }
     addSubcommand(validate)
 
