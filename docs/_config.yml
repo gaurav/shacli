@@ -7,7 +7,8 @@ title:            SHACLI
 tagline:          'A CLI for SHACL'
 description:      'A <abbr title="Command Line Interface">CLI</abbr> for <a href="https://www.w3.org/TR/shacl/">SHACL</a>'
 url:              https://www.shacli.org
-baseurl:          '/'
+baseurl:          ''
+permalink:        /:year/:month/:day/:title:output_ext
 
 author:
   name:           'Gaurav Vaidya'
