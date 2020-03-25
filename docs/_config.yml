@@ -3,24 +3,18 @@ markdown:         kramdown
 highlighter:      rouge
 
 # Setup
-title:            Hydeout
-tagline:          'A Jekyll theme'
-description:      'The <a href="http://hyde.getpoole.com" target="_blank">Hyde</a> theme for <a href="http://jekyllrb.com" target="_blank">Jekyll</a>, refreshed.'
-url:              https://fongandrew.github.io
-baseurl:          '/hydeout'
-                  # the optional subpath of your site, e.g. "/blog"
-                  # NB: This applies to all pages in your Jekyll site.
-                  # If you want to move just the blog index pages but keep
-                  # other pages at root, see the paginate_path and
-                  # sidebar_blog_link below.
+title:            SHACLI
+tagline:          'A CLI for SHACL'
+description:      'A <abbr title="Command Line Interface">CLI</abbr> for <a href="https://www.w3.org/TR/shacl/">SHACL</a>'
+url:              https://www.shacli.org
+baseurl:          '/'
 
 author:
-  name:           'Andrew Fong'
-  url:            https://twitter.com/fongandrewc
+  name:           'Gaurav Vaidya'
+  url:            https://www.ggvaidya.com
 
 paginate:         5
-# paginate_path:    '/page:num'
-                    # Or '/blog/page:num' if you want to move your index pages
+paginate_path:    '/page:num'
 
 plugins:
   - jekyll-feed
@@ -29,7 +23,4 @@ plugins:
 
 # Sidebar link settings
 sidebar_home_link:  true
-# sidebar_blog_link:  '/blog'   # By default, your home page is your blog
-                                # page. If you change your paginate_path,
-                                # set this to the root of the paginate_path
-                                # to enable a separate blog link.
+# sidebar_blog_link:  '/blog'
