@@ -1,2 +1,7 @@
 source "https://rubygems.org"
-gemspec
+
+# For Github Pages as per https://jekyllrb.com/docs/github-pages/
+gem "github-pages", group: :jekyll_plugins
+
+# Include Hydeout
+gem "jekyll-theme-hydeout", "~> 4.1"
