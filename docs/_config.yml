@@ -7,6 +7,10 @@ title:            SHACLI
 tagline:          'A CLI for SHACL'
 description:      'A <abbr title="Command Line Interface">CLI</abbr> for <a href="https://www.w3.org/TR/shacl/">SHACL</a>'
 url:              https://www.shacli.org
+hydeout:
+  repo:           https://github.com/gaurav/shacli
+  version:        0.1
+
 baseurl:          ''
 permalink:        /:year/:month/:day/:title:output_ext
 
