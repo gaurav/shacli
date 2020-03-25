@@ -1,0 +1,31 @@
+# Dependencies
+markdown:         kramdown
+highlighter:      rouge
+
+# Setup
+title:            SHACLI
+tagline:          'A CLI for SHACL'
+description:      'A <abbr title="Command Line Interface">CLI</abbr> for <a href="https://www.w3.org/TR/shacl/">SHACL</a>'
+url:              https://www.shacli.org
+hydeout:
+  repo:           https://github.com/gaurav/shacli
+  version:        0.1
+
+baseurl:          ''
+permalink:        /:year/:month/:day/:title:output_ext
+
+author:
+  name:           'Gaurav Vaidya'
+  url:            https://www.ggvaidya.com
+
+paginate:         5
+paginate_path:    '/page:num'
+
+plugins:
+  - jekyll-feed
+  - jekyll-gist
+  - jekyll-paginate
+
+# Sidebar link settings
+sidebar_home_link:  true
+# sidebar_blog_link:  '/blog'
