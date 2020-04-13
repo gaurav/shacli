@@ -8,7 +8,7 @@ licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
 
 // Scalac options.
 scalaVersion := "2.12.10"
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ywarn-unused")
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ywarn-unused", "-feature")
 
 addCompilerPlugin(scalafixSemanticdb)
 scalacOptions in Test ++= Seq("-Yrangepos")
