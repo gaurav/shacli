@@ -1,7 +1,7 @@
 // Publication information
-name := "shacli"
-ThisBuild / organization := "com.ggvaidya"
-ThisBuild / version      := "0.1-SNAPSHOT"
+name := "Shacli"
+ThisBuild / organization := "org.shacli"
+ThisBuild / version      := "0.1"
 
 // Code license
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
@@ -28,6 +28,14 @@ wartremoverWarnings ++= Warts.unsafe
 addCommandAlias(
   "scalafixCheckAll",
   "; compile:scalafix --check ; test:scalafix --check"
+)
+
+// Publish to Sonotype OSSRH.
+publishTo := sonatypePublishToBundle.value
+
+addCommandAlias(
+  "publishToSonatype",
+  "; publishSigned; sonatypeBundleRelease"
 )
 
 // Library dependencies.
