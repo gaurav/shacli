@@ -231,50 +231,77 @@ object Validator {
               )
           )
 
+        def getLabelWithLeadingSpace(rdfNode: RDFNode): String = {
+          if (rdfNode == null) return  " (empty)"
+          if (!rdfNode.isResource) return " (not a resource)"
+          val res = rdfNode.asResource
+          val statement = res.getModel.getProperty(res, RDFS.label)
+          if (statement != null) s" (${statement.getString})" else ""
+        }
+
+        def errorCountWithLeadingSpace(errorCount: Int): String = if (errorCount == 1) "" else s" ($errorCount errors)"
+
         filteredErrors
           .groupBy(_.classNode)
           .foreach({
             case (classNode, classErrors) =>
               // TODO: look up the classNode label
-              println(s"CLASS <${classNode}> (${classErrors.length} errors)")
+              println(s"CLASS <${classNode}>${getLabelWithLeadingSpace(classNode)}${errorCountWithLeadingSpace(classErrors.length)}")
               classErrors
                 .groupBy(_.focusNode)
                 .foreach({
                   case (focusNode, focusErrors) =>
-                    println(s"Node ${focusNode} (${focusErrors.length} errors)")
+                    println(s"Node ${focusNode}${getLabelWithLeadingSpace(focusNode)}${errorCountWithLeadingSpace(focusErrors.length)}")
                     focusErrors
                       .groupBy(_.path)
                       .foreach({
                         case (path, pathErrors) =>
-                          println(s" - Path <${path}> (${pathErrors.length} errors)")
+                          println(s" - Path <${path}>${getLabelWithLeadingSpace(dataModel.getResource(path))}${errorCountWithLeadingSpace(pathErrors.length)}")
                           pathErrors.foreach(error => {
                             println(
-                              s"   - [${error.sourceConstraintComponent}] ${error.message} ${error.value
-                                .map(value => s"(value: $value)")
-                                .mkString(", ")}"
+                              s"   - [${error.sourceConstraintComponent}] ${error.message}.${error.value
+                                .map(value => s"\n     - Value: $value${getLabelWithLeadingSpace(value)}")
+                                .mkString("")}"
                             )
                           })
                           println()
                       })
                     println()
                     if (conf.validate.displayNodes()) {
-                      // Display focusNode as Turtle.
-                      val focusNodeModel =
-                        focusNode.inModel(dataModel).asResource.listProperties.toModel
-                      focusNodeModel
-                        .setNsPrefixes(
-                          Map("SEPIO" -> "http://purl.obolibrary.org/obo/SEPIO_").asJava
-                        )
+                      def modelToString(model: Model): String = {
+                        val stringWriter = new StringWriter
+                        model.write(stringWriter, "Turtle")
+                        stringWriter.toString
+                          .replaceAll("(?m)^@prefix.*?$", "")
+                          .replaceAll("\n+", "\n")
+                          .trim
+                          .replaceAll("(?m)^", "  ")
+                      }
 
-                      val stringWriter = new StringWriter
-                      focusNodeModel.write(stringWriter, "Turtle")
-                      println(s"Focus node model:\n${stringWriter.toString}")
+                      // Display focusNode as Turtle.
+                      val focusNodeModel = focusNode.inModel(dataModel).asResource.listProperties.toModel
+                      focusNodeModel.setNsPrefixes(shapesModel)
+                      focusNodeModel.setNsPrefixes(dataModel)
+                      println(s"Focus node model:\n${modelToString(focusNodeModel)}\n")
+
+                      // Display value nodes as Turtle.
+                      focusErrors.map(_.value).flatten.toSet.flatMap((rdfNode: RDFNode) => {
+                        if (!rdfNode.isResource) None
+                        else {
+                          val valueNodeModel = rdfNode.inModel(dataModel).asResource.listProperties.toModel
+                          valueNodeModel.setNsPrefixes(shapesModel)
+                          valueNodeModel.setNsPrefixes(dataModel)
+
+                          Some(s"Value node model for $rdfNode:\n${modelToString(valueNodeModel)}\n")
+                        }
+                      }).foreach(println(_))
                     }
                 })
           })
 
         println()
-        println(s"${filteredErrors.length} errors displayed")
+        println(s"${filteredErrors.length} errors displayed.")
+        println()
 
         val ignoredErrors = errors diff filteredErrors
         if (!ignoredErrors.isEmpty) {
