@@ -33,6 +33,11 @@ addCommandAlias(
 // Publish to Sonotype OSSRH.
 publishTo := sonatypePublishToBundle.value
 
+addCommandAlias(
+  "publishToSonatype",
+  "; publishSigned; sonatypeBundleRelease"
+)
+
 // Library dependencies.
 libraryDependencies ++= {
   Seq(
