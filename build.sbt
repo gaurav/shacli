@@ -1,6 +1,6 @@
 // Publication information
-name := "shacli"
-ThisBuild / organization := "com.ggvaidya"
+name := "Shacli"
+ThisBuild / organization := "org.shacli"
 ThisBuild / version      := "0.1-SNAPSHOT"
 
 // Code license
@@ -29,6 +29,9 @@ addCommandAlias(
   "scalafixCheckAll",
   "; compile:scalafix --check ; test:scalafix --check"
 )
+
+// Publish to Sonotype OSSRH.
+publishTo := sonatypePublishToBundle.value
 
 // Library dependencies.
 libraryDependencies ++= {
