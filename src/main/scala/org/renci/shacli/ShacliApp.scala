@@ -43,8 +43,21 @@ object ShacliApp extends App with LazyLogging {
         default = Some(List()),
         descr = "Don't display SourceConstraintComponent ending with these strings"
       )
+      val `import`: ScallopOption[List[String]] = opt[List[String]](
+        descr = "Import URIs or files into the data model before processing",
+        default = Some(List.empty)
+      )
       val displayNodes: ScallopOption[Boolean] =
         opt[Boolean](default = Some(false), descr = "Display all failing nodes as Turtle")
+      val summarizeErrors: ScallopOption[Boolean] = opt[Boolean](
+        default = Some(true),
+        descr = "Summarize the validation errors seen"
+      )
+      val reasoning: ScallopOption[String] = opt[String](
+        descr = "Choose reasoning: none (default), rdfs or owl",
+        default = Some("none"),
+        validate = Set("none", "rdfs", "owl").contains(_)
+      )
     }
     addSubcommand(validate)
 
@@ -62,8 +75,8 @@ object ShacliApp extends App with LazyLogging {
       )
       val reasoning: ScallopOption[String] = opt[String](
         descr = "Choose reasoning: none (default), rdfs or owl",
-        default = Some("none")
-        // TODO: add validation to ensure that its one of the three kinds.
+        default = Some("none"),
+        validate = Set("none", "rdfs", "owl").contains(_)
       )
     }
     addSubcommand(generate)

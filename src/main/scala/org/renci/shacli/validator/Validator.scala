@@ -3,13 +3,12 @@ package org.renci.shacli.validator
 import scala.language.reflectiveCalls
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-
-import java.io.File
-import java.io.{InputStream, File, ByteArrayOutputStream, StringWriter}
+import java.net.URI
+import java.io.{ByteArrayOutputStream, File, InputStream, StringWriter}
 
 import org.topbraid.shacl.validation._
 import org.apache.jena.ontology.{OntModel, OntModelSpec}
-import org.apache.jena.rdf.model.{Model, ModelFactory, Resource, RDFNode, RDFList}
+import org.apache.jena.rdf.model.{Model, ModelFactory, RDFList, RDFNode, Resource}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.FileUtils
 import org.topbraid.jenax.util.SystemTriples
@@ -18,7 +17,6 @@ import org.topbraid.shacl.vocabulary.SH
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
 import com.typesafe.scalalogging.Logger
-
 import org.renci.shacli.ShacliApp
 
 /*
@@ -131,7 +129,22 @@ object Validator {
       logger.info(s"Starting validation of $dataFile against $shapesFile.")
 
       // Load the data model.
-      val dataModel: Model                = RDFDataMgr.loadModel(dataFile.toString);
+      val loadedModel: Model = RDFDataMgr.loadModel(dataFile.toString);
+
+      conf.validate.`import`().foreach(toImport => {
+        try {
+          RDFDataMgr.read(loadedModel, toImport)
+        } catch {
+          case exception: Exception => logger.error(s"Could not load $toImport: $exception")
+        }
+      })
+
+      // Turn on reasoning.
+      val dataModel: Model = conf.validate.reasoning() match {
+        case "none" => loadedModel
+        case "rdfs" => ModelFactory.createRDFSModel(loadedModel)
+        case "owl" => ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, loadedModel)
+      }
       val resourcesToCheck: Seq[Resource] = dataModel.listSubjects.toList.asScala
       logger.debug(s"Resources to check: ${resourcesToCheck}")
 
@@ -312,6 +325,18 @@ object Validator {
           ignoreConstraints.foreach(
             ignored => println(s" - Ignoring sourceConstraintComponents ending in '$ignored'")
           )
+        }
+
+        if(conf.validate.summarizeErrors()) {
+          println("Validation errors discovered:")
+          val errorsByConstraint = filteredErrors.groupBy(_.sourceConstraintComponent)
+          errorsByConstraint.keySet.toSeq.sorted(new Ordering[Resource]() {
+            override def compare(x: Resource, y: Resource): Int = x.getLocalName.compareTo(y.getLocalName)
+          }).map(constraint => {
+            val errors = errorsByConstraint.getOrElse(constraint, Seq())
+            println(s" - ${getShortenedURIs(Seq(constraint))}: ${errors.size} errors")
+          })
+          println()
         }
 
         println(dataFile + " FAILED VALIDATION")
