@@ -1,7 +1,7 @@
 // Publication information
 name := "Shacli"
 ThisBuild / organization := "org.shacli"
-ThisBuild / version      := "0.1"
+ThisBuild / version      := "0.2-SNAPSHOT"
 
 // Code license
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
