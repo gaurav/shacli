@@ -45,7 +45,8 @@ Subcommand: generate
   data (required)   Data file(s) or directories to validate (in Turtle)
 ```
 
-You can try validating the ClinGen examples files from the base directory using
+You can try validating the ClinGen examples files in the `test/resources` directory
+using the `validate` command.
 
 ```console
 $ ls
