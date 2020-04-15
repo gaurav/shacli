@@ -1,0 +1,166 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+@prefix BFO: <http://purl.obolibrary.org/obo/BFO_> .
+@prefix CG: <http://dataexchange.clinicalgenome.org/CG_> .
+@prefix CGEX: <http://dataexchange.clinicalgenome.org/CGEX_> .
+@prefix DC: <http://purl.org/dc/elements/1.1/> .
+@prefix ERO: <http://purl.obolibrary.org/obo/ERO_> .
+@prefix FALDO: <http://biohackathon.org/resource/faldo> .
+@prefix GENO: <http://purl.obolibrary.org/obo/GENO_> .
+@prefix PAV: <http://purl.org/pav/> .
+@prefix PROV: <http://www.w3.org/ns/prov#> .
+@prefix RDFS: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix RO: <http://purl.obolibrary.org/obo/RO_> .
+@prefix SO: <http://purl.obolibrary.org/obo/SO_> .
+@prefix HP: <http://purl.obolibrary.org/obo/HP_> .
+@prefix IGSR: <http://www.internationalgenome.org/> .
+@prefix GNOMAD: <http://gnomad.broadinstitute.org/> .
+@prefix EVS: <http://evs.gs.washington.edu/EVS/> .
+@prefix LOINC: <http://loinc.org/> .
+@prefix SEPIO: <http://purl.obolibrary.org/obo/SEPIO_> .
+@prefix SEPIO-CG: <http://purl.obolibrary.org/obo/SEPIO-CG_> .
+
+@prefix cgshapes: <http://example.org/cgshapes/> .
+
+# Inheritance works at the RDF level through RDF inheritance.
+# A Statement is a subclass of Entity.
+SEPIO:0000174 rdfs:subClassOf BFO:0000001 .
+# A Criterion Assessment is a subclass of Statement.
+SEPIO:0000191 rdfs:subClassOf SEPIO:0000174 .
+
+# ValueSets.
+cgshapes:CriterionAssessmentOutcomeValueSetShape a sh:NodeShape ; # Criterion Assessment Outcome Value Set
+  sh:or (
+    [ sh:in ( SEPIO:0000223 SEPIO:0000224 ) ]
+    [ sh:pattern "^http://purl.obolibrary.org/obo/sepio#" ]
+  )
+.
+
+# ClinGen Entity
+# https://dataexchange.clinicalgenome.org/interpretation/entities/Entity.html
+cgshapes:Entity a sh:NodeShape ;
+  sh:targetClass BFO:0000001 ; # entity
+  sh:property [
+    sh:name "label" ;
+    sh:description "A name given to the resource." ;
+    sh:path RDFS:label ; # label
+    sh:nodeKind sh:Literal ;
+    xsd:dataType rdf:string ;
+    sh:minCount 1 ; # This should have a minCount of 0, but we set it to 1 so we
+                    # can test inheritance.
+    sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:name "description" ;
+    sh:description "Description may include but is not limited to: an abstract, a table of contents, a graphical representation, or a free-text account of the resource." ;
+    sh:path DC:description ; # description
+    sh:nodeKind sh:Literal ;
+    xsd:dataType rdf:string ;
+    sh:minCount 0 ;
+    sh:maxCount 1
+  ] ;
+.
+
+# ClinGen Statement
+# https://dataexchange.clinicalgenome.org/interpretation/entities/Statement.html
+cgshapes:Statement a sh:NodeShape ;
+  sh:targetClass SEPIO:0000174 ; # statement
+  sh:property [
+    sh:name "userLabelDictionary" ;
+    sh:description "An optional label defined by the user. Used for custom entities or to clarify the preferred user label on existing entities with non-preferred labels." ;
+    sh:path SEPIO:0000422 ; # user_label_dictionary
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class SEPIO:0000421 ; # UserLabel
+    sh:node cgshapes:UserLabel ;
+    sh:minCount 0
+  ] ;
+  sh:property [
+    sh:name "outcomeQualifier" ;
+    sh:description "Use “NOT” as the value of this property to assert that the statement is negated." ;
+    sh:path SEPIO:0000346 ; # statement_qualifier
+    sh:nodeKind sh:Literal ;
+    xsd:dataType rdf:string ;
+    sh:minCount 0 ;
+    sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:name "evidenceLine" ;
+    sh:description "supporting evidence" ;
+    sh:path SEPIO:0000006 ; # has_evidence_line
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class SEPIO:0000002 ; # EvidenceLine
+    sh:node cgshapes:EvidenceLine ;
+    sh:minCount 0
+  ] ;
+  sh:property [
+    sh:name "contribution" ;
+    sh:description "The contributions (agent, time and role) made to this entity" ;
+    sh:path SEPIO:0000159 ; # qualified_contribution
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class SEPIO:0000158 ; # Contribution
+    sh:node cgshapes:Contribution ;
+    sh:minCount 0
+  ] ;
+  sh:property [
+    sh:name "source" ;
+    sh:description "A string indicating the source of a Statement" ;
+    sh:path DC:source ; # source
+    sh:nodeKind sh:Literal ;
+    xsd:dataType rdf:string ;
+    sh:minCount 0
+  ] ;
+.
+
+# ClinGen Criterion Assessment
+# https://dataexchange.clinicalgenome.org/interpretation/entities/CriterionAssessment.html
+cgshapes:CriterionAssessment a sh:NodeShape ;
+  sh:and (
+    cgshapes:Entity
+    [
+      a sh:NodeShape ;
+      sh:targetClass SEPIO:0000191 ; # criterion assessment
+      sh:property [
+        sh:name "criterion" ;
+        sh:description "The rule describing how the data is being used" ;
+        sh:path SEPIO:0000041 ; # is_specified_by
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:node cgshapes:ACMGCriterionValueSetShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+      ] ;
+      sh:property [
+        sh:name "variant" ;
+        sh:description "Variant about which the assemssment is made" ;
+        sh:path SEPIO:0000275 ; # is_about_allele
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:class GENO:0000890 ; # CanonicalAllele
+        sh:node cgshapes:CanonicalAllele ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+      ] ;
+      sh:property [
+        sh:name "statementOutcome" ;
+        sh:description "Result of assessing the data and criterion" ;
+        sh:path SEPIO:0000197 ; # asserted_conclusion
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:node cgshapes:CriterionAssessmentOutcomeValueSetShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+      ] ;
+      sh:property [
+        sh:name "condition" ;
+        sh:description "Condition for which the assessment is made" ;
+        sh:path SEPIO:0000276 ; # is_about_condition
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:class SEPIO:0000219 ; # GeneticCondition
+        sh:node cgshapes:GeneticCondition ;
+        sh:minCount 0
+      ]
+    ]
+  )
+.

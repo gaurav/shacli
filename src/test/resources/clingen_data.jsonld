@@ -1,0 +1,151 @@
+{
+  "@context": "https://raw.githubusercontent.com/clingen-data-model/spec2shacl/master/examples/context.jsonld",
+  "@graph": [{
+    "id": "SEPIO:0000191",
+    "type": "RDFS:Class",
+    "RDFS:subClassOf": { "@id": "SEPIO:0000174" }
+  }, {
+    "id": "SEPIO:0000174",
+    "type": "RDFS:Class",
+    "RDFS:subClassOf": { "@id": "BFO:0000001" }
+  }, {
+    "id": "CGEX:CritAssess156",
+    "type": "CriterionAssessment",
+    "description": "Most pathogenic variants in TTN are truncating. However, a small number of missense variants in TTN are associated with ARVC (Taylor 2011 PMID:21810661 ) Because TTN is such a large gene, the statistical expectation of benign missense variants is very high.",
+    "criterion": {
+      "id": "SEPIO-CG:99034",
+      "type": "VariantPathogenicityInterpretationCriterion",
+      "label": "PP2",
+      "description": "Missense variant in a gene that has a low rate of benign missense variation and in which missense variants are a common mechanism of disease",
+      "usageNotes": "Seems no one has established firm rules for when this rule is applicable so not sure how great any examples will be\nAgree with the lack of firm rules. Seems like one criteria may be observed missense variants over 5% allele frequency in ExAC. If this seems reasonable then I could generate a couple of examples.",
+      "defaultStrength": {
+        "id": "SEPIO:0000329",
+        "label": "Pathogenic Supporting"
+      }
+    },
+    "variant": {
+      "id": "CAR:CA256496",
+      "type": "CanonicalAllele",
+      "relatedContextualAllele": "CGEX:CtxAll099"
+    },
+    "statementOutcome": {
+      "id": "SEPI:0000224",
+      "label": "Not Met"
+    },
+    "evidenceLine": [
+      {
+        "id": "CGEX:EvLn132",
+        "type": "EvidenceLine",
+        "evidenceItem": [
+          {
+            "id": "CGEX:BMVR161",
+            "type": "BenignMissenseVariationRateStatement",
+            "description": "In LMM data alone, we have over 150 benign missense variants in TTN.",
+            "gene": {
+              "id": "HGNC:12403",
+              "label": "TTN"
+            },
+            "statementOutcome": {
+              "id": "SEPIO:0000265",
+              "label": "High"
+            }
+          },
+          {
+            "id": "CGEX:MolCon169",
+            "type": "AlleleMolecularConsequenceStatement",
+            "contextualAllele": {
+              "id": "CGEX:CtxAll099",
+              "type": "ContextualAllele",
+              "relatedCanonicalAllele": {
+                "id": "CAR:CA256496",
+                "type": "CanonicalAllele",
+                "relatedContextualAllele": "CGEX:CtxAll099"
+              },
+              "alleleName": {
+                "id": "CGEX:CtxNm9099",
+                "type": "ContextualAlleleName",
+                "name": "NM_133378.4(TTN): c.2926T>C",
+                "preferred": true
+              }
+            },
+            "statementOutcome": {
+              "id": "SO:0001583",
+              "label": "missense variant"
+            }
+          },
+          {
+            "id": "CGEX:Null406",
+            "type": "NullAlleleStatement",
+            "contextualAllele": {
+              "id": "CGEX:CtxAll099",
+              "type": "ContextualAllele",
+              "relatedCanonicalAllele": {
+                "id": "CAR:CA256496",
+                "type": "CanonicalAllele",
+                "relatedContextualAllele": "CGEX:CtxAll099"
+              },
+              "alleleName": {
+                "id": "CGEX:CtxNm9099",
+                "type": "ContextualAlleleName",
+                "name": "NM_133378.4(TTN): c.2926T>C",
+                "preferred": true
+              }
+            },
+            "statementOutcome": {
+              "id": "SEPIO-CG:99015",
+              "label": "function not lost"
+            }
+          },
+          {
+            "id": "CGEX:CondMech165",
+            "type": "ConditionMechanismStatement",
+            "statementOutcome": {
+              "id": "SO:0001583",
+              "label": "missense variant"
+            },
+            "mechanismConfidence": {
+              "id": "SEPIO:0000268",
+              "label": "common"
+            },
+            "gene": {
+              "id": "HGNC:12403",
+              "label": "TTN"
+            },
+            "condition": {
+              "id": "CGEX:GenCond054",
+              "type": "GeneticCondition",
+              "disease": [
+                {
+                  "id": "Orphanet:247",
+                  "label": "arrhythmogenic right ventricular cardiomyopathy"
+                }
+              ]
+            },
+            "source": [
+              "PMID:21810661"
+            ]
+          }
+        ]
+      }
+    ],
+    "contribution": [
+      {
+        "id": "CGEX:Contrib519",
+        "type": "Contribution",
+        "agent": {
+          "id": "CGEX:Agent010",
+          "type": "Agent",
+          "label": "ACME Molecular Lab"
+        },
+        "contributionRole": {
+          "id": "SEPIO:0000154",
+          "label": "assessor"
+        },
+        "contributionDate": "7/2/2012 8:45 AM"
+      }
+    ],
+    "source": [
+      "PMID:21810661"
+    ]
+  }]
+}
