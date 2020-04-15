@@ -27,19 +27,18 @@
 
 @prefix cgshapes: <http://example.org/cgshapes/> .
 
-# Inheritance works at the RDF level through RDF inheritance.
-# A Statement is a subclass of Entity.
-SEPIO:0000174 rdfs:subClassOf BFO:0000001 .
-# A Criterion Assessment is a subclass of Statement.
-SEPIO:0000191 rdfs:subClassOf SEPIO:0000174 .
+# VALUESETS
 
-# ValueSets.
+# CriterionAssessmentOutcomeValueSet
+# https://dataexchange.clinicalgenome.org/interpretation/terminologies/CriterionAssessmentOutcomeValueSet.html
 cgshapes:CriterionAssessmentOutcomeValueSetShape a sh:NodeShape ; # Criterion Assessment Outcome Value Set
   sh:or (
     [ sh:in ( SEPIO:0000223 SEPIO:0000224 ) ]
     [ sh:pattern "^http://purl.obolibrary.org/obo/sepio#" ]
   )
 .
+
+# ENTITIES
 
 # ClinGen Entity
 # https://dataexchange.clinicalgenome.org/interpretation/entities/Entity.html
