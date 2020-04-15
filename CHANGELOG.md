@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] (0.2-SNAPSHOT)
 - Added support for reasoning, summarizing errors and import of additional data.
+- Added examples and documentation for ClinGen use-case.
 
 ## [0.1] - 2020-04-14
 - Includes a Validator that can be used to validate RDF data against SHACL files.
