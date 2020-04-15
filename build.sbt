@@ -34,6 +34,10 @@ addCommandAlias(
 publishTo := sonatypePublishToBundle.value
 
 addCommandAlias(
+  "publishAsSnapshot",
+  "; publishSigned; sonatypePrepare"
+)
+addCommandAlias(
   "publishToSonatype",
   "; publishSigned; sonatypeBundleRelease"
 )
