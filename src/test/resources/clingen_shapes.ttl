@@ -69,6 +69,7 @@ cgshapes:Entity a sh:NodeShape ;
 # https://dataexchange.clinicalgenome.org/interpretation/entities/Statement.html
 cgshapes:Statement a sh:NodeShape ;
   sh:targetClass SEPIO:0000174 ; # statement
+  sh:node cgshapes:Entity ;
   sh:property [
     sh:name "userLabelDictionary" ;
     sh:description "An optional label defined by the user. Used for custom entities or to clarify the preferred user label on existing entities with non-preferred labels." ;
@@ -118,48 +119,43 @@ cgshapes:Statement a sh:NodeShape ;
 # ClinGen Criterion Assessment
 # https://dataexchange.clinicalgenome.org/interpretation/entities/CriterionAssessment.html
 cgshapes:CriterionAssessment a sh:NodeShape ;
-  sh:and (
-    cgshapes:Entity
-    [
-      a sh:NodeShape ;
-      sh:targetClass SEPIO:0000191 ; # criterion assessment
-      sh:property [
-        sh:name "criterion" ;
-        sh:description "The rule describing how the data is being used" ;
-        sh:path SEPIO:0000041 ; # is_specified_by
-        sh:nodeKind sh:BlankNodeOrIRI ;
-        sh:node cgshapes:ACMGCriterionValueSetShape ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-      ] ;
-      sh:property [
-        sh:name "variant" ;
-        sh:description "Variant about which the assemssment is made" ;
-        sh:path SEPIO:0000275 ; # is_about_allele
-        sh:nodeKind sh:BlankNodeOrIRI ;
-        sh:class GENO:0000890 ; # CanonicalAllele
-        sh:node cgshapes:CanonicalAllele ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-      ] ;
-      sh:property [
-        sh:name "statementOutcome" ;
-        sh:description "Result of assessing the data and criterion" ;
-        sh:path SEPIO:0000197 ; # asserted_conclusion
-        sh:nodeKind sh:BlankNodeOrIRI ;
-        sh:node cgshapes:CriterionAssessmentOutcomeValueSetShape ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-      ] ;
-      sh:property [
-        sh:name "condition" ;
-        sh:description "Condition for which the assessment is made" ;
-        sh:path SEPIO:0000276 ; # is_about_condition
-        sh:nodeKind sh:BlankNodeOrIRI ;
-        sh:class SEPIO:0000219 ; # GeneticCondition
-        sh:node cgshapes:GeneticCondition ;
-        sh:minCount 0
-      ]
-    ]
-  )
+  sh:node cgshapes:Entity ;
+  sh:targetClass SEPIO:0000191 ; # criterion assessment
+  sh:property [
+    sh:name "criterion" ;
+    sh:description "The rule describing how the data is being used" ;
+    sh:path SEPIO:0000041 ; # is_specified_by
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:node cgshapes:ACMGCriterionValueSetShape ;
+    sh:minCount 1 ;
+    sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:name "variant" ;
+    sh:description "Variant about which the assemssment is made" ;
+    sh:path SEPIO:0000275 ; # is_about_allele
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class GENO:0000890 ; # CanonicalAllele
+    sh:node cgshapes:CanonicalAllele ;
+    sh:minCount 1 ;
+    sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:name "statementOutcome" ;
+    sh:description "Result of assessing the data and criterion" ;
+    sh:path SEPIO:0000197 ; # asserted_conclusion
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:node cgshapes:CriterionAssessmentOutcomeValueSetShape ;
+    sh:minCount 1 ;
+    sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:name "condition" ;
+    sh:description "Condition for which the assessment is made" ;
+    sh:path SEPIO:0000276 ; # is_about_condition
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class SEPIO:0000219 ; # GeneticCondition
+    sh:node cgshapes:GeneticCondition ;
+    sh:minCount 0
+  ]
 .
