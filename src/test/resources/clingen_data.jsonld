@@ -1,14 +1,6 @@
 {
   "@context": "https://raw.githubusercontent.com/clingen-data-model/spec2shacl/master/examples/context.jsonld",
   "@graph": [{
-    "id": "SEPIO:0000191",
-    "type": "RDFS:Class",
-    "RDFS:subClassOf": { "@id": "SEPIO:0000174" }
-  }, {
-    "id": "SEPIO:0000174",
-    "type": "RDFS:Class",
-    "RDFS:subClassOf": { "@id": "BFO:0000001" }
-  }, {
     "id": "CGEX:CritAssess156",
     "type": "CriterionAssessment",
     "description": "Most pathogenic variants in TTN are truncating. However, a small number of missense variants in TTN are associated with ARVC (Taylor 2011 PMID:21810661 ) Because TTN is such a large gene, the statistical expectation of benign missense variants is very high.",
